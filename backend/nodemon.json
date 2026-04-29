@@ -1,0 +1,3 @@
+{
+  "ignore": ["public", "uploads", "temp", "node_modules"]
+}
