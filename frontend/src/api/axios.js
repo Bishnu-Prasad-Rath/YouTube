@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const api = axios.create({
-  baseURL: "https://youtube-3agm.onrender.com/api/v1", // Adjust to match your backend port
+  baseURL: import.meta.env.VITE_API_URL, // Adjust to match your backend port
   withCredentials: true, // Crucial for getting and setting HTTP-only cookies
 });
 

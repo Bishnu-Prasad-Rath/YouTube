@@ -27,7 +27,7 @@ const ConnectionMonitor = () => {
 const LiveStreamHeader = () => {
     const participants = useParticipants();
     return (
-        <div className="absolute top-6 left-6 z-20 flex gap-4">
+        <div className="absolute z-20 flex gap-4 top-6 left-6">
             <LiveBadge viewers={Math.max(0, participants.length - 1)} />
         </div>
     );
@@ -54,29 +54,29 @@ const ViewerControls = ({ isPlaying, setIsPlaying, volume, setVolume, containerR
 
         return (
             <>
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex gap-4 p-4 transition-transform hover:-translate-y-1 neo-player-controls rounded-md flex-wrap justify-center w-max items-center">
+            <div className="absolute z-30 flex flex-wrap items-center justify-center gap-4 p-4 transition-transform -translate-x-1/2 rounded-md bottom-6 left-1/2 hover:-translate-y-1 neo-player-controls w-max">
                 <button 
                    onClick={() => setIsPlaying(!isPlaying)}
-                   className="neo-player-btn px-6 py-2 bg-black text-white"
+                   className="px-6 py-2 text-white bg-black neo-player-btn"
                 >
                    {isPlaying ? "PAUSE" : "PLAY"}
                 </button>
-                <div className="flex items-center gap-3 px-4 border-x-2 border-white h-10">
-                    <span className="font-black text-white uppercase text-sm">VOL</span>
+                <div className="flex items-center h-10 gap-3 px-4 border-white border-x-2">
+                    <span className="text-sm font-black text-white uppercase">VOL</span>
                     <input 
                        type="range" 
                        min="0" max="1" step="0.05" 
                        value={volume} 
                        onChange={(e) => setVolume(parseFloat(e.target.value))} 
-                       className="cursor-pointer accent-neoYellow h-2 bg-white rounded-lg appearance-none w-24"
+                       className="w-24 h-2 bg-white rounded-lg appearance-none cursor-pointer accent-neoYellow"
                     />
                 </div>
                 
-                <div className="relative border-r-2 border-white h-10 flex items-center px-4">
+                <div className="relative flex items-center h-10 px-4 border-r-2 border-white">
                     <div 
                         role="button"
                         onClick={() => setShowSettings(!showSettings)}
-                        className="text-white hover:text-neoYellow transition-colors flex items-center justify-center cursor-pointer"
+                        className="flex items-center justify-center text-white transition-colors cursor-pointer hover:text-neoYellow"
                     >
                         <Settings size={24} />
                     </div>
@@ -84,7 +84,7 @@ const ViewerControls = ({ isPlaying, setIsPlaying, volume, setVolume, containerR
 
                 <button 
                    onClick={toggleFullscreen}
-                   className="neo-player-btn px-6 py-2 bg-black text-white"
+                   className="px-6 py-2 text-white bg-black neo-player-btn"
                 >
                    FULLSCREEN
                 </button>
@@ -92,17 +92,17 @@ const ViewerControls = ({ isPlaying, setIsPlaying, volume, setVolume, containerR
             
             {showSettings && (
                 <div className="fixed bottom-28 left-1/2 -translate-x-1/2 bg-neoWhite border-4 border-neoBlack shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col p-2 min-w-[150px] z-[9999]">
-                    <div role="button" onClick={(e) => { e.preventDefault(); e.nativeEvent.stopImmediatePropagation(); e.stopPropagation(); handleQualitySelect(VideoQuality.HIGH); }} className="text-black hover:bg-neoYellow font-black py-2 px-4 uppercase text-left flex justify-between items-center border-b-2 border-transparent hover:border-black cursor-pointer">
-                        1080p {forcedQuality === VideoQuality.HIGH && <span className="text-black font-black">✓</span>}
+                    <div role="button" onClick={(e) => { e.preventDefault(); e.nativeEvent.stopImmediatePropagation(); e.stopPropagation(); handleQualitySelect(VideoQuality.HIGH); }} className="flex items-center justify-between px-4 py-2 font-black text-left text-black uppercase border-b-2 border-transparent cursor-pointer hover:bg-neoYellow hover:border-black">
+                        1080p {forcedQuality === VideoQuality.HIGH && <span className="font-black text-black">✓</span>}
                     </div>
-                    <div role="button" onClick={(e) => { e.preventDefault(); e.nativeEvent.stopImmediatePropagation(); e.stopPropagation(); handleQualitySelect(VideoQuality.MEDIUM); }} className="text-black hover:bg-neoYellow font-black py-2 px-4 uppercase text-left flex justify-between items-center border-b-2 border-transparent hover:border-black cursor-pointer">
-                        720p {forcedQuality === VideoQuality.MEDIUM && <span className="text-black font-black">✓</span>}
+                    <div role="button" onClick={(e) => { e.preventDefault(); e.nativeEvent.stopImmediatePropagation(); e.stopPropagation(); handleQualitySelect(VideoQuality.MEDIUM); }} className="flex items-center justify-between px-4 py-2 font-black text-left text-black uppercase border-b-2 border-transparent cursor-pointer hover:bg-neoYellow hover:border-black">
+                        720p {forcedQuality === VideoQuality.MEDIUM && <span className="font-black text-black">✓</span>}
                     </div>
-                    <div role="button" onClick={(e) => { e.preventDefault(); e.nativeEvent.stopImmediatePropagation(); e.stopPropagation(); handleQualitySelect(VideoQuality.LOW); }} className="text-black hover:bg-neoYellow font-black py-2 px-4 uppercase text-left flex justify-between items-center border-b-2 border-transparent hover:border-black cursor-pointer">
-                        360p {forcedQuality === VideoQuality.LOW && <span className="text-black font-black">✓</span>}
+                    <div role="button" onClick={(e) => { e.preventDefault(); e.nativeEvent.stopImmediatePropagation(); e.stopPropagation(); handleQualitySelect(VideoQuality.LOW); }} className="flex items-center justify-between px-4 py-2 font-black text-left text-black uppercase border-b-2 border-transparent cursor-pointer hover:bg-neoYellow hover:border-black">
+                        360p {forcedQuality === VideoQuality.LOW && <span className="font-black text-black">✓</span>}
                     </div>
-                    <div role="button" onClick={(e) => { e.preventDefault(); e.nativeEvent.stopImmediatePropagation(); e.stopPropagation(); handleQualitySelect("AUTO"); }} className="text-black hover:bg-neoYellow font-black py-2 px-4 uppercase text-left flex justify-between items-center border-b-2 border-transparent hover:border-black cursor-pointer">
-                        Auto {forcedQuality === "AUTO" && <span className="text-black font-black">✓</span>}
+                    <div role="button" onClick={(e) => { e.preventDefault(); e.nativeEvent.stopImmediatePropagation(); e.stopPropagation(); handleQualitySelect("AUTO"); }} className="flex items-center justify-between px-4 py-2 font-black text-left text-black uppercase border-b-2 border-transparent cursor-pointer hover:bg-neoYellow hover:border-black">
+                        Auto {forcedQuality === "AUTO" && <span className="font-black text-black">✓</span>}
                     </div>
                 </div>
             )}
@@ -166,10 +166,10 @@ const ViewerVideoArea = () => {
                         {screenTrack ? (
                             <VideoTrack 
                                 trackRef={screenTrack} 
-                                className="absolute inset-0 w-full h-full object-contain z-0"
+                                className="absolute inset-0 z-0 object-contain w-full h-full"
                             />
                         ) : (
-                            <div className="absolute inset-0 z-0 flex items-center justify-center text-white font-black text-3xl uppercase tracking-widest animate-pulse p-6">
+                            <div className="absolute inset-0 z-0 flex items-center justify-center p-6 text-3xl font-black tracking-widest text-white uppercase animate-pulse">
                                 Awaiting Screen Share...
                             </div>
                         )}
@@ -179,7 +179,7 @@ const ViewerVideoArea = () => {
                             <div className="absolute top-6 right-6 z-20 w-48 lg:w-64 aspect-video border-4 border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-black overflow-hidden pointer-events-none">
                                 <VideoTrack 
                                     trackRef={camTrack} 
-                                    className="w-full h-full object-cover" 
+                                    className="object-cover w-full h-full" 
                                 />
                             </div>
                         )}
@@ -235,6 +235,14 @@ export const LiveStream = () => {
   };
 
   useEffect(() => {
+  // ✅ Validate Mongo ObjectId (24 hex chars)
+  const isValidId = /^[0-9a-fA-F]{24}$/.test(liveId);
+
+  if (!liveId || !isValidId) {
+    console.log("❌ Invalid liveId, skipping API calls:", liveId);
+    return;
+  }
+
     if (liveId) {
       // Fetch full live metadata
       api.get(`/live/${liveId}`)
@@ -313,7 +321,7 @@ export const LiveStream = () => {
     setChatInput("");
   };
 
-  if (!liveId) return <div className="text-center mt-12 font-black text-2xl uppercase neo-card border-4 shadow-neo max-w-sm mx-auto bg-neoYellow">Starting stream room...</div>;
+  if (!liveId) return <div className="max-w-sm mx-auto mt-12 text-2xl font-black text-center uppercase border-4 neo-card shadow-neo bg-neoYellow">Starting stream room...</div>;
 
   return (
     <div className="max-w-[1600px] mx-auto px-6 pb-12 pt-4 flex flex-col xl:flex-row gap-8 h-[calc(100vh-100px)]">
@@ -329,7 +337,7 @@ export const LiveStream = () => {
               connect={true}
               adaptiveStream={{ pixelDensity: 'screen' }}
               dynacast={true}
-              className="w-full h-full relative"
+              className="relative w-full h-full"
               onDisconnected={() => console.log("LiveKit disconnected natively")}
               onError={(err) => console.error("LiveKit Fatal Error: " + err.message)}
             >
@@ -337,7 +345,7 @@ export const LiveStream = () => {
               <ViewerVideoArea />
             </LiveKitRoom>
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-neoWhite p-12 bg-zinc-900 border-b-4 border-white">
+            <div className="flex items-center justify-center w-full h-full p-12 border-b-4 border-white text-neoWhite bg-zinc-900">
               <h2 className="text-4xl lg:text-6xl font-black bg-neoRed inline-block px-8 py-4 border-4 border-neoWhite -rotate-2 shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] tracking-widest uppercase">
                 TUNING IN...
               </h2>
@@ -350,14 +358,14 @@ export const LiveStream = () => {
             <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-full border-4 border-neoBlack overflow-hidden bg-zinc-800 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                    {liveDetails?.streamer?.avatar ? (
-                      <img src={liveDetails.streamer.avatar} alt="avatar" className="w-full h-full object-cover" />
+                      <img src={liveDetails.streamer.avatar} alt="avatar" className="object-cover w-full h-full" />
                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-white font-black">?</div>
+                      <div className="flex items-center justify-center w-full h-full font-black text-white">?</div>
                    )}
                 </div>
                 <div>
-                   <h1 className="text-2xl font-black uppercase text-black">{liveDetails?.title || "Live Transmission"}</h1>
-                   <p className="font-bold text-gray-800 mt-1 uppercase">@{liveDetails?.streamer?.username || "Broadcaster"}</p>
+                   <h1 className="text-2xl font-black text-black uppercase">{liveDetails?.title || "Live Transmission"}</h1>
+                   <p className="mt-1 font-bold text-gray-800 uppercase">@{liveDetails?.streamer?.username || "Broadcaster"}</p>
                 </div>
             </div>
             
@@ -387,32 +395,32 @@ export const LiveStream = () => {
 
       {/* Sticky Right Sidebar for Chat */}
       <div className="w-full xl:w-[450px] shrink-0 sticky top-4 border-t-8 lg:border-t-0 lg:border-l-8 border-neoBlack bg-zinc-900 flex flex-col h-[500px] xl:h-full p-0">
-        <h3 className="font-black text-xl uppercase p-4 border-b-4 border-neoBlack bg-neoYellow text-black leading-none tracking-wide text-center">Live Chat</h3>
+        <h3 className="p-4 text-xl font-black leading-none tracking-wide text-center text-black uppercase border-b-4 border-neoBlack bg-neoYellow">Live Chat</h3>
         
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+        <div className="flex flex-col flex-1 gap-4 p-4 overflow-y-auto">
           {messages.length === 0 && (
-             <p className="text-center text-gray-500 font-bold mt-4 uppercase text-sm">Chat is quiet...</p>
+             <p className="mt-4 text-sm font-bold text-center text-gray-500 uppercase">Chat is quiet...</p>
           )}
           {messages.map((m, i) => (
              <div key={i} className="font-bold flex flex-col gap-1 p-3 border-4 border-neoBlack bg-black shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] text-sm relative self-start max-w-[90%] mt-2">
                 <span className="text-yellow-400 uppercase break-words text-xs tracking-wider absolute top-[-10px] bg-neoBlack border-2 border-neoBlack px-2 py-0.5 shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] -rotate-2">
                   @{m.user?.username || 'Guest'}
                 </span>
-                <span className="break-words mt-2 text-base text-white">{m.message}</span>
+                <span className="mt-2 text-base text-white break-words">{m.message}</span>
              </div>
           ))}
           <div ref={chatBottomRef} />
         </div>
         
-        <form onSubmit={sendChat} className="flex gap-0 border-t-4 border-neoBlack shrink-0 mt-auto">
+        <form onSubmit={sendChat} className="flex gap-0 mt-auto border-t-4 border-neoBlack shrink-0">
           <input 
             type="text" 
             value={chatInput} 
             onChange={(e) => setChatInput(e.target.value)}
             placeholder="Type message..." 
-            className="flex-1 min-w-0 bg-neoWhite px-4 py-4 outline-none font-bold placeholder-gray-500" 
+            className="flex-1 min-w-0 px-4 py-4 font-bold placeholder-gray-500 outline-none bg-neoWhite" 
           />
-          <button type="submit" className="bg-neoBlack text-neoWhite px-6 font-black uppercase hover:bg-gray-800 transition-colors">
+          <button type="submit" className="px-6 font-black uppercase transition-colors bg-neoBlack text-neoWhite hover:bg-gray-800">
             SEND
           </button>
         </form>

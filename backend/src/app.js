@@ -10,26 +10,9 @@ app.use(helmet());
 
 app.disable("x-powered-by");
 
-const allowedOrigins = [
-  "https://youtube-seven-delta.vercel.app", // Your main production URL
-  "http://localhost:5173",                 // Your local dev URL
-];
 
 app.use(cors({
-  origin: function (origin, callback) {
-    // 1. Allow requests with no origin (like mobile apps or curl)
-    if (!origin) return callback(null, true);
-
-    // 2. Check if the origin matches your main domain or a Vercel preview domain
-    const isVercelPreview = origin.endsWith(".vercel.app");
-    const isAllowed = allowedOrigins.includes(origin);
-
-    if (isAllowed || isVercelPreview) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  origin: process.env.CORS_ORIGIN, // Adjust to match your frontend URL
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
 }));

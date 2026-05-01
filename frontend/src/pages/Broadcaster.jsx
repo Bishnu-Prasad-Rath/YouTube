@@ -106,7 +106,7 @@ const CustomControls = ({ containerRef, onEndStream }) => {
   }, []);
 
   return (
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex gap-4 p-4 transition-transform hover:-translate-y-1 neo-player-controls rounded-md flex-wrap justify-center w-max items-center">
+      <div className="absolute z-30 flex flex-wrap items-center justify-center gap-4 p-4 transition-transform -translate-x-1/2 rounded-md bottom-6 left-1/2 hover:-translate-y-1 neo-player-controls w-max">
           <div className="flex items-center gap-2">
               <button 
                  onClick={toggleMic}
@@ -115,10 +115,10 @@ const CustomControls = ({ containerRef, onEndStream }) => {
                  {isMicEnabled ? "MIC ON" : "MIC OFF"}
               </button>
               {isMicEnabled && (
-                  <div className="flex items-end gap-1 h-8 px-2 border-2 border-white bg-black">
-                      <div className="w-2 bg-neoGreen transition-all duration-75" style={{ height: Math.max(4, volume * 100) + '%' }} />
-                      <div className="w-2 bg-neoGreen transition-all duration-75 delay-75" style={{ height: Math.max(4, volume * 80) + '%' }} />
-                      <div className="w-2 bg-neoGreen transition-all duration-75 delay-150" style={{ height: Math.max(4, volume * 120 > 100 ? 100 : volume * 120) + '%' }} />
+                  <div className="flex items-end h-8 gap-1 px-2 bg-black border-2 border-white">
+                      <div className="w-2 transition-all duration-75 bg-neoGreen" style={{ height: Math.max(4, volume * 100) + '%' }} />
+                      <div className="w-2 transition-all duration-75 delay-75 bg-neoGreen" style={{ height: Math.max(4, volume * 80) + '%' }} />
+                      <div className="w-2 transition-all duration-75 delay-150 bg-neoGreen" style={{ height: Math.max(4, volume * 120 > 100 ? 100 : volume * 120) + '%' }} />
                   </div>
               )}
           </div>
@@ -139,14 +139,14 @@ const CustomControls = ({ containerRef, onEndStream }) => {
 
           <button 
              onClick={toggleFullscreen}
-             className="neo-player-btn px-4 py-2 bg-black text-white hover:text-black"
+             className="px-4 py-2 text-white bg-black neo-player-btn hover:text-black"
           >
              {isFullscreen ? "EXIT FULL" : "FULLSCREEN"}
           </button>
 
           <button 
              onClick={onEndStream}
-             className="neo-player-btn px-4 py-2 bg-neoRed text-white border-neoRed hover:text-black"
+             className="px-4 py-2 text-white neo-player-btn bg-neoRed border-neoRed hover:text-black"
           >
              END STREAM
           </button>
@@ -180,10 +180,10 @@ const MainVideoArea = ({ containerRef, onEndStream }) => {
             {screenPub?.track ? (
                 <VideoTrack 
                     trackRef={{ participant: localParticipant, source: Track.Source.ScreenShare, publication: screenPub }} 
-                    className="absolute inset-0 w-full h-full object-contain z-0"
+                    className="absolute inset-0 z-0 object-contain w-full h-full"
                 />
             ) : (
-                <div className="absolute inset-0 z-0 flex items-center justify-center text-white font-black text-3xl uppercase tracking-widest animate-pulse p-6">
+                <div className="absolute inset-0 z-0 flex items-center justify-center p-6 text-3xl font-black tracking-widest text-white uppercase animate-pulse">
                     Awaiting Screen Share...
                 </div>
             )}
@@ -193,7 +193,7 @@ const MainVideoArea = ({ containerRef, onEndStream }) => {
                 <div className="absolute top-6 right-6 z-20 w-48 lg:w-64 aspect-video border-4 border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-black overflow-hidden pointer-events-none">
                      <VideoTrack 
                          trackRef={{ participant: localParticipant, source: Track.Source.Camera, publication: cameraPub }} 
-                         className="w-full h-full object-cover" 
+                         className="object-cover w-full h-full" 
                      />
                 </div>
             )}
@@ -209,13 +209,13 @@ const MetricsPanel = () => {
 
     const metricsContent = useMemo(() => {
         return (
-            <div className="p-4 bg-neoWhite border-b-8 border-neoBlack flex justify-between items-center z-10 relative">
+            <div className="relative z-10 flex items-center justify-between p-4 border-b-8 bg-neoWhite border-neoBlack">
                 <div className="flex flex-col">
-                    <span className="font-black text-sm uppercase text-gray-800">Viewers</span>
-                    <span className="font-black text-3xl">{Math.max(0, participants.length - 1)}</span>
+                    <span className="text-sm font-black text-gray-800 uppercase">Viewers</span>
+                    <span className="text-3xl font-black">{Math.max(0, participants.length - 1)}</span>
                 </div>
                 <div className="flex flex-col text-right">
-                    <span className="font-black text-sm uppercase text-gray-800 mb-1">Status</span>
+                    <span className="mb-1 text-sm font-black text-gray-800 uppercase">Status</span>
                     <span className={`font-black text-xs uppercase px-3 py-1 border-2 border-black ${state === ConnectionState.Connected ? 'bg-neoGreen shadow-[2px_2px_0_0_rgba(0,0,0,1)]' : 'bg-neoYellow'}`}>
                         {state}
                     </span>
@@ -266,30 +266,30 @@ const CustomChat = ({ liveId }) => {
     };
 
     return (
-        <div className="flex flex-col h-full bg-zinc-900 absolute inset-0 pt-16">
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+        <div className="absolute inset-0 flex flex-col h-full pt-16 bg-zinc-900">
+            <div className="flex flex-col flex-1 gap-4 p-4 overflow-y-auto">
                 {messages.length === 0 && (
-                    <p className="text-center text-gray-500 font-bold mt-4 uppercase text-sm">Chat is quiet...</p>
+                    <p className="mt-4 text-sm font-bold text-center text-gray-500 uppercase">Chat is quiet...</p>
                 )}
                 {messages.map((m, i) => (
                     <div key={i} className="font-bold flex flex-col gap-1 p-3 border-4 border-neoBlack bg-black shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] text-sm relative self-start max-w-[90%] mt-2">
                         <span className="text-yellow-400 uppercase break-words text-xs tracking-wider absolute top-[-10px] bg-neoBlack border-2 border-neoBlack px-2 py-0.5 shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] -rotate-2">
                           @{m.user?.username || 'Broadcaster'}
                         </span>
-                        <span className="break-words mt-2 text-base text-white">{m.message}</span>
+                        <span className="mt-2 text-base text-white break-words">{m.message}</span>
                     </div>
                 ))}
                 <div ref={bottomRef} />
             </div>
-            <form onSubmit={handleSubmit} className="flex gap-0 border-t-4 border-neoBlack shrink-0 mt-auto">
+            <form onSubmit={handleSubmit} className="flex gap-0 mt-auto border-t-4 border-neoBlack shrink-0">
                 <input 
                     type="text" 
                     value={input} 
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Type message..." 
-                    className="flex-1 min-w-0 bg-neoWhite px-4 py-4 outline-none font-bold placeholder-gray-500" 
+                    className="flex-1 min-w-0 px-4 py-4 font-bold placeholder-gray-500 outline-none bg-neoWhite" 
                 />
-                <button type="submit" className="bg-neoBlack text-neoWhite px-6 font-black uppercase hover:bg-gray-800 transition-colors">
+                <button type="submit" className="px-6 font-black uppercase transition-colors bg-neoBlack text-neoWhite hover:bg-gray-800">
                     SEND
                 </button>
             </form>
@@ -299,11 +299,11 @@ const CustomChat = ({ liveId }) => {
 
 const LiveChatArea = ({ liveId }) => {
     return (
-        <div className="flex-1 flex flex-col min-h-0 bg-zinc-900 relative">
+        <div className="relative flex flex-col flex-1 min-h-0 bg-zinc-900">
             <div className="absolute top-0 w-full p-4 bg-neoYellow border-b-4 border-neoBlack font-black text-xl uppercase tracking-widest text-center shadow-[0_4px_0_0_rgba(0,0,0,1)] z-10">
                 Live Chat
             </div>
-            <div className="flex-1 overflow-hidden relative w-full">
+            <div className="relative flex-1 w-full overflow-hidden">
                 <CustomChat liveId={liveId} />
             </div>
         </div>
@@ -351,25 +351,27 @@ export const Broadcaster = () => {
     }
   };
 
-  const roomOptions = useMemo(() => ({
-      publishDefaults: {
-          simulcast: true,
-          videoEncoding: VideoPresets.h1080.encoding,
-          videoSimulcastLayers: [
-              VideoPresets.h1080,
-              VideoPresets.h720
-          ],
-      },
-      audioCaptureDefaults: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-      }
-  }), []);
+const roomOptions = useMemo(() => ({
+    adaptiveStream: { pixelDensity: 'screen' }, // Move here
+    dynacast: true,                             // Move here
+    publishDefaults: {
+        simulcast: true,
+        videoEncoding: VideoPresets.h1080.encoding,
+        videoSimulcastLayers: [
+            VideoPresets.h1080,
+            VideoPresets.h720
+        ],
+    },
+    audioCaptureDefaults: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+    }
+}), []);
 
   return (
     <div className="max-w-[1800px] mx-auto px-6 pb-12 pt-8 h-[calc(100vh-80px)] flex flex-col">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex items-center justify-between mb-6">
           <h1 className="text-4xl font-black uppercase inline-block bg-neoYellow border-4 border-black px-4 py-2 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
             Pro Studio
           </h1>
@@ -385,7 +387,7 @@ export const Broadcaster = () => {
 
       {!isLive ? (
         <div className="neo-card bg-neoWhite max-w-xl mx-auto border-4 border-neoBlack shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] p-8 mt-12 w-full">
-           <h2 className="text-3xl font-black uppercase mb-6 text-center">Setup Transmission</h2>
+           <h2 className="mb-6 text-3xl font-black text-center uppercase">Setup Transmission</h2>
            <input
              type="text"
              value={title}
@@ -403,19 +405,17 @@ export const Broadcaster = () => {
       ) : (
         <div className="flex-1 border-8 border-neoBlack shadow-[15px_15px_0px_0px_#00E1FF] bg-zinc-900 overflow-hidden relative rounded-xl">
           {token && typeof token === 'string' && (
-            <LiveKitRoom
-               video={true}
-               audio={true}
-               token={token}
-               serverUrl={import.meta.env.VITE_LIVEKIT_URL || 'wss://yt-project-nmm37dpf.livekit.cloud'}
-               connect={true}
-               options={roomOptions}
-               adaptiveStream={{ pixelDensity: 'screen' }}
-               dynacast={true}
-               className="w-full h-full flex flex-col lg:flex-row"
-               onDisconnected={() => alert("LiveKit disconnected natively.")}
-               onError={(err) => alert("LiveKit Fatal Error: " + err.message)}
-            >
+<LiveKitRoom
+    video={true}
+    audio={true}
+    token={token}
+    serverUrl={import.meta.env.VITE_LIVEKIT_URL || 'wss://yt-project-nmm37dpf.livekit.cloud'}
+    connect={true}
+    options={roomOptions} // These are now handled inside roomOptions
+    className="flex flex-col w-full h-full lg:flex-row"
+    onDisconnected={() => alert("LiveKit disconnected natively.")}
+    onError={(err) => alert("LiveKit Fatal Error: " + err.message)}
+>
               <ConnectionMonitor />
               
               {/* Left Column: 75% Main Video */}

@@ -10,9 +10,11 @@ export const Home = () => {
     const fetchVideos = async () => {
       try {
         const { data } = await api.get("/videos");
-        setVideos(data.data.videos || data.data || []);
+        setVideos(data.data?.videos || data.data || []);
       } catch (error) {
         console.error("Failed to fetch videos");
+
+        setVideos([]);
       } finally {
         setLoading(false);
       }
@@ -20,14 +22,14 @@ export const Home = () => {
     fetchVideos();
   }, []);
 
-  if (loading) return <div className="text-center font-black text-4xl mt-12 uppercase animate-pulse">Loading Video Grid...</div>;
+  if (loading) return <div className="mt-12 text-4xl font-black text-center uppercase animate-pulse">Loading Video Grid...</div>;
 
   return (
     <div className="px-6 pb-12">
-      <h1 className="text-4xl font-black mb-8 uppercase border-b-4 border-neoBlack pb-4 inline-block tracking-tight bg-neoYellow shadow-neo px-4 py-2 mt-4">
+      <h1 className="inline-block px-4 py-2 pb-4 mt-4 mb-8 text-4xl font-black tracking-tight uppercase border-b-4 border-neoBlack bg-neoYellow shadow-neo">
         Explore
       </h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {videos.map((video) => (
           <VideoCard key={video._id} video={video} />
         ))}
