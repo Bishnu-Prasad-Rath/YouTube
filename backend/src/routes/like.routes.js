@@ -5,6 +5,7 @@ import {
   toggleVideoLike,
   toggleTweetLike,
   toggleLiveLike,
+  getVideoLikeStatus,
 } from "../controllers/like.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { rateLimitMiddleware } from "../middlewares/rateLimit.middleware.js";
@@ -41,6 +42,12 @@ router
   .get(
     rateLimitMiddleware({ windowSize: 10, maxRequests: 25 }),
     getLikedVideos
+  );
+router
+  .route("/status/v/:videoId")
+  .get(
+    rateLimitMiddleware({ windowSize: 10, maxRequests: 30 }),
+    getVideoLikeStatus
   );
 
 export default router;

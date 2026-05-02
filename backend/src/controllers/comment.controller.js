@@ -33,13 +33,13 @@ const getVideoComments = asyncHandler(async (req, res) => {
       .json(new ApiResponse(200, cached, "Comments fetched from cache."));
   }
 
-    console.timeEnd("FULL_REQUEST");
-
+  console.timeEnd("FULL_REQUEST");
 
   const skip = (page - 1) * limit;
 
   const comments = await Comment.find({ video: videoId })
-    .select("content createdAt")
+    .select("content createdAt owner")
+    .populate("owner", "username avatar fullName")
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
@@ -72,7 +72,7 @@ const addComment = asyncHandler(async (req, res) => {
 
   await deleteCommentsCache(videoId);
 
-  getIO().to(videoId).emit('comment:new', comment);
+  getIO().to(videoId).emit("comment:new", comment);
 
   return res
     .status(201)
@@ -99,8 +99,11 @@ const addTweetComment = asyncHandler(async (req, res) => {
     owner: req.user._id,
   });
 
-  const populatedComment = await Comment.findById(comment._id).populate("owner", "username avatar fullName");
-  getIO().emit('new:reply', populatedComment);
+  const populatedComment = await Comment.findById(comment._id).populate(
+    "owner",
+    "username avatar fullName"
+  );
+  getIO().emit("new:reply", populatedComment);
 
   return res
     .status(201)
@@ -166,4 +169,10 @@ const deleteComment = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, comment, "Comment deleted successfully"));
 });
 
-export { getVideoComments, addComment, addTweetComment, updateComment, deleteComment };
+export {
+  getVideoComments,
+  addComment,
+  addTweetComment,
+  updateComment,
+  deleteComment,
+};

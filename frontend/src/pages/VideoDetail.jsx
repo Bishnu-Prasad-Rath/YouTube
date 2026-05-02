@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import { useSubscription } from "../hooks/useSubscription";
 import { Comment } from "../components/Comment";
 import { VideoCard } from "../components/VideoCard";
+import { LikeButton } from "../components/LikeButton";
 import { motion } from "framer-motion";
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize } from "lucide-react";
 
@@ -193,7 +194,7 @@ export const VideoDetail = () => {
 
   // toggleSubscription is imported from custom hook
 
-  if (!video) return <h2 className="font-black text-4xl p-8 uppercase text-center mt-12 bg-neoBlue shadow-neo border-4 border-neoBlack mx-auto max-w-xl">Loading Video...</h2>;
+  if (!video) return <h2 className="max-w-xl p-8 mx-auto mt-12 text-4xl font-black text-center uppercase border-4 bg-neoBlue shadow-neo border-neoBlack">Loading Video...</h2>;
 
   console.log("Current Comments in State:", comments.length);
 
@@ -203,12 +204,12 @@ export const VideoDetail = () => {
       <div className="flex-none lg:w-[65%] xl:w-[70%]">
         
         {/* Custom Video Player */}
-        <div ref={playerContainerRef} className="relative neo-card p-0 mb-6 border-4 border-neoBlack shadow-neo group bg-neoBlack">
+        <div ref={playerContainerRef} className="relative p-0 mb-6 border-4 neo-card border-neoBlack shadow-neo group bg-neoBlack">
           <video 
             ref={videoRef}
             src={video.videoFile} 
             poster={video.thumbnail} 
-            className="w-full aspect-video object-cover outline-none cursor-pointer"
+            className="object-cover w-full outline-none cursor-pointer aspect-video"
             onClick={togglePlay}
             onTimeUpdate={handleTimeUpdate}
             // Make sure video ends on unpause state if it reaches end
@@ -220,21 +221,21 @@ export const VideoDetail = () => {
             
             {/* Progress Bar */}
             <div 
-              className="w-full h-3 border-2 border-neoBlack bg-white relative cursor-pointer group/progress mb-4 mt-2"
+              className="relative w-full h-3 mt-2 mb-4 bg-white border-2 cursor-pointer border-neoBlack group/progress"
               onClick={handleProgressClick}
             >
               <div 
-                className="absolute top-0 left-0 h-full bg-neoYellow border-r-2 border-neoBlack"
+                className="absolute top-0 left-0 h-full border-r-2 bg-neoYellow border-neoBlack"
                 style={{ width: `${progress}%` }}
               />
               <div 
-                className="absolute top-1/2 -translate-y-1/2 w-4 h-6 bg-neoBlack border-2 border-white opacity-0 group-hover/progress:opacity-100 transition-opacity"
+                className="absolute w-4 h-6 transition-opacity -translate-y-1/2 border-2 border-white opacity-0 top-1/2 bg-neoBlack group-hover/progress:opacity-100"
                 style={{ left: `calc(${progress}% - 8px)` }}
               />
             </div>
 
             {/* Buttons */}
-            <div className="flex justify-between items-center text-white">
+            <div className="flex items-center justify-between text-white">
                <div className="flex gap-4">
                   <button onClick={togglePlay} className="p-2 border-2 border-black bg-neoGreen text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none hover:bg-[#9eff00] transition-colors">
                     {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
@@ -254,41 +255,47 @@ export const VideoDetail = () => {
           </div>
         </div>
         
-        <div className="flex justify-between items-start lg:items-center gap-4 mb-4 flex-col lg:flex-row">
-          <h1 className="text-3xl font-black uppercase tracking-tight">{video.title}</h1>
+        <div className="flex flex-col items-start justify-between gap-4 mb-4 lg:items-center lg:flex-row">
+          <h1 className="text-3xl font-black tracking-tight uppercase">{video.title}</h1>
           <div className="font-black text-xl px-4 py-2 bg-neoYellow border-4 border-neoBlack shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] uppercase whitespace-nowrap">
             {video.views || 0} Views
           </div>
         </div>
         
-        <div className="flex justify-between items-center bg-neoWhite border-4 border-neoBlack shadow-neo p-4 mb-6 relative overflow-hidden">
-          <div className="flex items-center gap-4 relative z-10">
+        <div className="relative flex items-center justify-between p-4 mb-6 overflow-hidden border-4 bg-neoWhite border-neoBlack shadow-neo">
+          <div className="relative z-10 flex items-center gap-4">
             <Link to={`/u/${video.owner?.username}`}>
               <img src={video.owner?.avatar || "https://ui-avatars.com/api/?name=U"} alt="channel" className="w-14 h-14 rounded-full border-4 border-neoBlack bg-neoYellow object-cover shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:scale-105 transition-transform" />
             </Link>
             <div>
               <Link to={`/u/${video.owner?.username}`} className="hover:underline decoration-2">
-                <h3 className="font-black text-xl leading-tight">{video.owner?.username}</h3>
+                <h3 className="text-xl font-black leading-tight">{video.owner?.username}</h3>
               </Link>
-              <p className="font-bold text-sm text-gray-700">{subscribersCount} subscribers</p>
+              <p className="text-sm font-bold text-gray-700">{subscribersCount} subscribers</p>
             </div>
           </div>
           {currentUser?.username !== video.owner?.username ? (
+            <div className="relative z-10 flex items-center gap-3">
             <button 
                onClick={() => toggleSubscription(video?.owner?._id)}
                disabled={loading}
-               className={`neo-btn uppercase tracking-widest text-lg px-6 py-3 relative z-10 ${isSubscribed ? 'bg-pink-400' : 'bg-neoYellow'} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`neo-btn uppercase tracking-widest text-lg px-6 py-3 ${isSubscribed ? 'bg-pink-400' : 'bg-neoYellow'} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {isSubscribed ? 'Unsubscribe' : 'Subscribe'}
             </button>
+                          <LikeButton videoId={videoId} />
+            </div>
           ) : (
-            <button className="neo-btn uppercase tracking-widest text-lg px-6 py-3 relative z-10 bg-neoBlue text-white hover:bg-blue-600">
-              Edit Video
-            </button>
+            <div className="relative z-10 flex items-center gap-3">
+              <button className="px-6 py-3 text-lg tracking-widest text-white uppercase neo-btn bg-neoBlue hover:bg-blue-600">
+                Edit Video
+              </button>
+              <LikeButton videoId={videoId} />
+            </div>
           )}
           
           {/* Decorative shapes behind channel info */}
-          <div className="absolute top-0 right-1/4 w-32 h-32 bg-neoBlue/30 rounded-full blur-2xl"></div>
+          <div className="absolute top-0 w-32 h-32 rounded-full right-1/4 bg-neoBlue/30 blur-2xl"></div>
         </div>
 
         {/* Description Box with Show More */}
@@ -303,13 +310,13 @@ export const VideoDetail = () => {
                {video.description}
              </p>
            </motion.div>
-           <div className="font-black uppercase text-sm mt-3 border-t-4 border-neoBlack pt-2 text-right">
+           <div className="pt-2 mt-3 text-sm font-black text-right uppercase border-t-4 border-neoBlack">
              {showMore ? "Show less" : "Show more"}
            </div>
         </div>
 
         <div>
-          <h2 className="font-black text-2xl uppercase mb-6 inline-block bg-neoBlue px-4 py-2 border-4 border-neoBlack shadow-neo text-neoWhite">Comments ({comments.length})</h2>
+          <h2 className="inline-block px-4 py-2 mb-6 text-2xl font-black uppercase border-4 bg-neoBlue border-neoBlack shadow-neo text-neoWhite">Comments ({comments.length})</h2>
           
           {currentUser ? (
             <div className="flex gap-4 mb-8">
@@ -329,7 +336,7 @@ export const VideoDetail = () => {
               </button>
             </div>
           ) : (
-            <div className="font-bold text-lg mb-8 uppercase p-4 border-4 border-neoBlack bg-neoYellow shadow-neo text-center">Please sign in to comment.</div>
+            <div className="p-4 mb-8 text-lg font-bold text-center uppercase border-4 border-neoBlack bg-neoYellow shadow-neo">Please sign in to comment.</div>
           )}
           
           <div className="flex flex-col gap-4">
@@ -339,18 +346,18 @@ export const VideoDetail = () => {
       </div>
       
       {/* 30% Recommended Sidebar */}
-      <div className="flex-1 flex flex-col gap-6">
-        <h2 className="font-black text-2xl uppercase inline-block bg-neoYellow px-4 py-2 border-4 border-neoBlack shadow-neo mb-2 w-max">Recommended</h2>
+      <div className="flex flex-col flex-1 gap-6">
+        <h2 className="inline-block px-4 py-2 mb-2 text-2xl font-black uppercase border-4 bg-neoYellow border-neoBlack shadow-neo w-max">Recommended</h2>
         {recLoading ? (
           <>
             {[1, 2, 3].map((_, idx) => (
               <div key={idx} className="neo-card p-0 overflow-hidden flex flex-col h-[280px] bg-neoWhite border-4 border-neoBlack animate-pulse">
-                <div className="border-b-4 border-neoBlack h-40 bg-gray-300"></div>
-                <div className="p-4 flex gap-3 flex-1">
+                <div className="h-40 bg-gray-300 border-b-4 border-neoBlack"></div>
+                <div className="flex flex-1 gap-3 p-4">
                    <div className="w-10 h-10 rounded-full border-[3px] border-neoBlack bg-gray-300 shrink-0"></div>
-                   <div className="flex flex-col gap-2 w-full">
-                     <div className="h-4 bg-gray-300 w-full mb-1"></div>
-                     <div className="h-3 bg-gray-300 w-2/3"></div>
+                   <div className="flex flex-col w-full gap-2">
+                     <div className="w-full h-4 mb-1 bg-gray-300"></div>
+                     <div className="w-2/3 h-3 bg-gray-300"></div>
                    </div>
                 </div>
               </div>
@@ -363,7 +370,7 @@ export const VideoDetail = () => {
             </div>
           ))
         ) : (
-          <div className="neo-card bg-neoWhite text-center p-8 uppercase font-bold border-dashed border-4 border-neoBlack">
+          <div className="p-8 font-bold text-center uppercase border-4 border-dashed neo-card bg-neoWhite border-neoBlack">
             No recommendations
           </div>
         )}

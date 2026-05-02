@@ -2,9 +2,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "../api/axios";
+import { useAuth } from "../context/AuthContext";
+import { useSubscription } from "../hooks/useSubscription";
+import { Comment } from "../components/Comment";
+import { LikeButton } from "../components/LikeButton";
 import {
   Play, Pause, Volume2, VolumeX, Maximize, Minimize,
-  SkipBack, SkipForward, ListVideo, Film,
+  SkipBack, SkipForward, ListVideo, Film, MessageSquare,
 } from "lucide-react";
 
 const isValidObjectId = (id) => /^[a-f\d]{24}$/i.test(id);
@@ -25,6 +29,14 @@ export const PlaylistPlayerPage = () => {
   const [progress, setProgress] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [viewToast, setViewToast] = useState(null);
+
+  // Comment state
+  const [comments, setComments] = useState([]);
+  const [commentInput, setCommentInput] = useState("");
+  const [isPostingComment, setIsPostingComment] = useState(false);
+
+  const { currentUser } = useAuth();
 
   const videoRef = useRef(null);
   const playerContainerRef = useRef(null);
@@ -86,6 +98,42 @@ export const PlaylistPlayerPage = () => {
     const el = document.getElementById(`queue-item-${currentVideoIndex}`);
     el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [currentVideoIndex]);
+
+  // ── View counting (debounced, per-session dedup) ──────────
+  useEffect(() => {
+    const videoId = currentVideo?._id;
+    if (!videoId || !isValidObjectId(videoId)) return;
+
+    const sessionKey = `playlist_viewed_${videoId}`;
+    const alreadyViewed = sessionStorage.getItem(sessionKey);
+
+    const timer = setTimeout(async () => {
+      if (alreadyViewed) return;
+      try {
+        await api.get(`/videos/${videoId}?inc=true`);
+        sessionStorage.setItem(sessionKey, "true");
+
+        // Update local view count in playlist state
+        setPlaylist((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            videos: prev.videos.map((v) =>
+              v._id === videoId ? { ...v, views: (v.views || 0) + 1 } : v
+            ),
+          };
+        });
+
+        // Show toast only on first view of the session
+        setViewToast("TRANSMISSION RECEIVED: VIEW LOGGED");
+        setTimeout(() => setViewToast(null), 3000);
+      } catch (err) {
+        console.error("View tracking failed:", err);
+      }
+    }, 7000); // 7s debounce — skip before this = no view
+
+    return () => clearTimeout(timer);
+  }, [currentVideo?._id]);
 
   // ── Player controls ───────────────────────────────────────
   const togglePlay = async () => {
@@ -191,6 +239,19 @@ export const PlaylistPlayerPage = () => {
 
   return (
     <div className="max-w-[1600px] mx-auto px-4 sm:px-6 pb-12 pt-4">
+      {/* View toast */}
+      <AnimatePresence>
+        {viewToast && (
+          <motion.div
+            initial={{ x: 300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 300, opacity: 0 }}
+            className="fixed top-6 right-6 z-[100] px-5 py-3 bg-[#00E1FF] border-[3px] border-neoBlack shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] font-black uppercase text-sm tracking-wider"
+          >
+            {viewToast}
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="flex flex-col gap-6 lg:flex-row">
         {/* ═══ LEFT: Video Player (70%) ═══ */}
         <div className="flex-none lg:w-[70%]">
@@ -278,28 +339,23 @@ export const PlaylistPlayerPage = () => {
             </button>
           </div>
 
-          {/* Video info */}
-          <div className="mt-6 border-4 border-neoBlack shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white p-5">
-            <h1 className="mb-2 text-2xl font-black tracking-tight uppercase sm:text-3xl">
-              {currentVideo?.title}
-            </h1>
-            <div className="flex flex-wrap items-center gap-4 text-sm font-bold text-gray-600">
-              <span>{currentVideo?.views || 0} views</span>
-              <span>•</span>
-              <span>{currentVideo?.createdAt ? new Date(currentVideo.createdAt).toLocaleDateString() : ""}</span>
-            </div>
-            {currentVideo?.owner && typeof currentVideo.owner === "object" && currentVideo.owner.username && (
-              <Link
-                to={`/u/${currentVideo.owner.username}`}
-                className="inline-flex items-center gap-2 mt-3 text-sm font-black uppercase hover:underline decoration-4 underline-offset-2"
-              >
-                {currentVideo.owner.avatar && (
-                  <img src={currentVideo.owner.avatar} alt="" className="object-cover w-8 h-8 border-2 rounded-full border-neoBlack" />
-                )}
-                {currentVideo.owner.username}
-              </Link>
-            )}
-          </div>
+          {/* ═══ Creator Bar ═══ */}
+          <CreatorBar
+            currentVideo={currentVideo}
+            currentUser={currentUser}
+          />
+
+          {/* ═══ Comment Section ═══ */}
+          <CommentSection
+            videoId={currentVideo?._id}
+            comments={comments}
+            setComments={setComments}
+            commentInput={commentInput}
+            setCommentInput={setCommentInput}
+            isPostingComment={isPostingComment}
+            setIsPostingComment={setIsPostingComment}
+            currentUser={currentUser}
+          />
         </div>
 
         {/* ═══ RIGHT: Playlist Queue (30%) ═══ */}
@@ -380,5 +436,211 @@ export const PlaylistPlayerPage = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════ */
+/* ██ CreatorBar — Subscribe + Like + Channel Info          ██ */
+/* ═══════════════════════════════════════════════════════════ */
+const CreatorBar = ({ currentVideo, currentUser }) => {
+  const owner = currentVideo?.owner;
+  const hasOwner = owner && typeof owner === "object" && owner.username;
+
+  const { isSubscribed, subscribersCount, toggleSubscription, loading } =
+    useSubscription(owner?._id, false, 0);
+
+  return (
+    <div className="mt-6 border-4 border-neoBlack shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white p-5">
+      {/* Title + Views */}
+      <h1 className="mb-2 text-2xl font-black tracking-tight uppercase sm:text-3xl">
+        {currentVideo?.title}
+      </h1>
+      <div className="flex flex-wrap items-center gap-4 mb-4 text-sm font-bold text-gray-600">
+        <span>{currentVideo?.views || 0} views</span>
+        <span>•</span>
+        <span>
+          {currentVideo?.createdAt
+            ? new Date(currentVideo.createdAt).toLocaleDateString()
+            : ""}
+        </span>
+      </div>
+
+      {/* Channel row */}
+      <div className="flex items-center justify-between flex-wrap gap-3 bg-neoWhite border-4 border-neoBlack shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4">
+        {/* Left: Avatar + name + subs */}
+        <div className="flex items-center gap-3">
+          {hasOwner && (
+            <Link to={`/u/${owner.username}`}>
+              <img
+                src={owner.avatar || `https://ui-avatars.com/api/?name=${owner.username}&background=8fff00&bold=true`}
+                alt={owner.username}
+                className="w-12 h-12 rounded-full border-4 border-neoBlack object-cover shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:scale-105 transition-transform"
+              />
+            </Link>
+          )}
+          <div>
+            {hasOwner && (
+              <Link
+                to={`/u/${owner.username}`}
+                className="text-lg font-black leading-tight hover:underline decoration-2"
+              >
+                {owner.username}
+              </Link>
+            )}
+            <p className="text-sm font-bold text-gray-500">
+              {subscribersCount} subscribers
+            </p>
+          </div>
+        </div>
+
+        {/* Right: Subscribe + Like */}
+        <div className="flex items-center gap-3">
+          {hasOwner && currentUser?.username !== owner.username && (
+            <button
+              onClick={() => toggleSubscription(owner._id)}
+              disabled={loading}
+              className={`neo-btn uppercase tracking-widest text-sm px-5 py-2.5 border-4 border-neoBlack shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-black ${
+                isSubscribed ? "bg-[#8fff00]" : "bg-white"
+              } ${loading ? "opacity-50 cursor-not-allowed" : "hover:-translate-y-0.5"}`}
+            >
+              {isSubscribed ? "Subscribed" : "Subscribe"}
+            </button>
+          )}
+          {currentVideo?._id && <LikeButton videoId={currentVideo._id} />}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════ */
+/* ██ CommentSection — Post + List with slide-in animation ██ */
+/* ═══════════════════════════════════════════════════════════ */
+const CommentSection = ({
+  videoId,
+  comments,
+  setComments,
+  commentInput,
+  setCommentInput,
+  isPostingComment,
+  setIsPostingComment,
+  currentUser,
+}) => {
+  // Fetch comments when videoId changes
+  useEffect(() => {
+    if (!videoId || !isValidObjectId(videoId)) {
+      setComments([]);
+      return;
+    }
+    let cancelled = false;
+
+    const fetchComments = async () => {
+      try {
+        const { data } = await api.get(`/comment/${videoId}?page=1&limit=50`);
+        if (!cancelled) setComments(data.data || []);
+      } catch (err) {
+        console.error("Failed to fetch comments:", err);
+        if (!cancelled) setComments([]);
+      }
+    };
+
+    fetchComments();
+    setCommentInput("");
+    return () => { cancelled = true; };
+  }, [videoId]);
+
+  const handlePostComment = async () => {
+    if (!commentInput.trim() || !videoId || isPostingComment) return;
+    setIsPostingComment(true);
+    try {
+      const { data } = await api.post(`/comment/${videoId}`, {
+        content: commentInput.trim(),
+      });
+      const newComment = data.data;
+      // Prepend with owner info from current user
+      setComments((prev) => [
+        {
+          ...newComment,
+          owner: {
+            _id: currentUser._id,
+            username: currentUser.username,
+            avatar: currentUser.avatar,
+          },
+        },
+        ...prev,
+      ]);
+      setCommentInput("");
+    } catch (err) {
+      console.error("Failed to post comment:", err);
+    } finally {
+      setIsPostingComment(false);
+    }
+  };
+
+  return (
+    <motion.div
+      key={videoId}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
+      className="mt-6"
+    >
+      {/* Header */}
+      <h2 className="font-black text-xl uppercase mb-4 inline-flex items-center gap-2 bg-neoBlue px-4 py-2 border-4 border-neoBlack shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-white">
+        <MessageSquare size={20} className="stroke-[3]" />
+        Comments ({comments.length})
+      </h2>
+
+      {/* Post input */}
+      {currentUser ? (
+        <div className="flex gap-3 mb-6">
+          <input
+            type="text"
+            value={commentInput}
+            onChange={(e) => setCommentInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handlePostComment()}
+            placeholder="Add a bold comment..."
+            className="neo-input flex-1 bg-neoYellow outline-none border-4 border-neoBlack shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-[#fff700] transition-colors"
+          />
+          <button
+            onClick={handlePostComment}
+            disabled={isPostingComment || !commentInput.trim()}
+            className={`neo-btn bg-neoWhite uppercase border-4 border-neoBlack shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-black ${
+              isPostingComment || !commentInput.trim()
+                ? "opacity-50 cursor-not-allowed"
+                : "active:translate-y-1 active:translate-x-1 active:shadow-none"
+            }`}
+          >
+            {isPostingComment ? "Posting..." : "Post"}
+          </button>
+        </div>
+      ) : (
+        <div className="font-bold text-lg mb-6 uppercase p-4 border-4 border-neoBlack bg-neoYellow shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center">
+          Please sign in to comment.
+        </div>
+      )}
+
+      {/* Comment list */}
+      <div className="flex flex-col gap-1">
+        <AnimatePresence>
+          {comments.map((c) => (
+            <motion.div
+              key={c._id}
+              initial={{ opacity: 0, x: -15 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 15 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Comment comment={c} />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+        {comments.length === 0 && (
+          <div className="py-8 font-bold text-center text-gray-400 uppercase bg-white border-4 border-dashed border-neoBlack">
+            No comments yet. Be the first!
+          </div>
+        )}
+      </div>
+    </motion.div>
   );
 };

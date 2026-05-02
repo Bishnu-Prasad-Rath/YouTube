@@ -57,7 +57,8 @@ const getPlaylistById = asyncHandler(async (req, res) => {
       populate: {
         path: "owner",
         select: "username fullName avatar",
-      },    })
+      },
+    })
     .populate({
       path: "owner",
       select: "username fullName avatar",

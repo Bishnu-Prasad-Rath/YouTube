@@ -313,4 +313,35 @@ const getLikedVideos = asyncHandler(async (req, res) => {
     );
 });
 
-export { toggleCommentLike, toggleTweetLike, toggleVideoLike, toggleLiveLike, getLikedVideos };
+const getVideoLikeStatus = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
+
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, "Invalid video ID");
+  }
+
+  // Check if the current user has liked this video
+  const existingLike = await Like.findOne({
+    video: videoId,
+    likedBy: req.user._id,
+  });
+
+  // Get total like count — try Redis first, fallback to DB
+  let likesCount = await getVideoLikes(videoId);
+
+  if (likesCount === null) {
+    likesCount = await Like.countDocuments({ video: videoId });
+    await setVideoLikes(videoId, likesCount);
+  }
+
+  likesCount = Math.max(0, Number(likesCount) || 0);
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      isLiked: !!existingLike,
+      likesCount,
+    }, "Like status fetched successfully")
+  );
+});
+
+export { toggleCommentLike, toggleTweetLike, toggleVideoLike, toggleLiveLike, getLikedVideos, getVideoLikeStatus };
