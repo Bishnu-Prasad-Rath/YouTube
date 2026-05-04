@@ -59,9 +59,10 @@ export const VideoDetail = () => {
       const incQuery = !hasViewed ? '?inc=true' : '';
 
       try {
-        const [videoRes, commentRes, recRes] = await Promise.all([
+       const [videoRes, commentRes, recRes] = await Promise.all([
           api.get(`/videos/${videoId}${incQuery}`),
-          api.get(`/comment/${videoId}`),
+          // Add the exact same query params here so the cache keys match perfectly
+          api.get(`/comment/${videoId}?page=1&limit=50`), 
           api.get(`/videos?limit=5`)
         ]);
 

@@ -26,6 +26,7 @@ import {
   getLiveLikes,
   setLiveLikes,
 } from "../redis/cache/like.cache.js";
+import { deleteCommentsCache } from "../redis/cache/comment.cache.js";
 import { incrementLikes, decrementLikes } from "../redis/cache/dashboard.cache.js";
 import { updateTrendingScore } from "../redis/cache/trending.cache.js";
 import { trendingQueue } from "../queues/trending.queue.js";
@@ -121,6 +122,13 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid comment ID");
   }
 
+  // 1. Fetch the comment ONCE to prevent redeclaration errors
+  const comment = await Comment.findById(commentId);
+  if (!comment) throw new ApiError(404, "Comment not found");
+
+  const channelId = comment.owner;
+  const videoId = comment.video;
+
   const existingLike = await Like.findOne({
     comment: commentId,
     likedBy: req.user._id,
@@ -132,32 +140,36 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
   let like;
   let totalLikes;
 
-const comment = await Comment.findById(commentId);
-if (!comment) throw new ApiError(404, "Comment not found");
-const channelId = comment.owner;
-
   if (existingLike) {
+    // UNLIKE Logic
     await Like.findByIdAndDelete(existingLike._id);
     action = "unlike";
     await decrementLikes(channelId, "comment");
     totalLikes = await decrementCommentLikes(commentId);
   } else {
+    // LIKE Logic
     like = await Like.create({
       comment: commentId,
       likedBy: req.user._id,
     });
-
     action = "like";
-
-const comment = await Comment.findById(commentId);
-const channelId = comment.owner;
-
+    // NOTE: Removed the duplicate 'const comment' and 'const channelId' from here!
     await incrementLikes(channelId, "comment");
     totalLikes = await incrementCommentLikes(commentId);
   }
 
+  // 2. Clear the comment cache so the Playlist & Video pages sync up!
+  if (videoId) {
+    try {
+      await deleteCommentsCache(videoId);
+    } catch (cacheErr) {
+      console.error("Failed to delete comment cache:", cacheErr.message);
+    }
+  }
+
   totalLikes = Number(totalLikes) || 0;
 
+  // 3. Fallback sync for Redis
   if (totalLikes < 0) {
     let redisLikes = await getCommentLikes(commentId);
 
@@ -170,15 +182,13 @@ const channelId = comment.owner;
     }
   }
 
-  res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        { like, action, totalLikes },
-        action === "like" ? "Comment liked" : "Comment unliked"
-      )
-    );
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      { like, action, totalLikes, isLiked: action === "like" },
+      action === "like" ? "Comment liked" : "Comment unliked"
+    )
+  );
 
   io.to(`comment:${commentId}`).emit("comment:like", {
     commentId,

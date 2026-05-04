@@ -35,15 +35,49 @@ const getVideoComments = asyncHandler(async (req, res) => {
 
   console.timeEnd("FULL_REQUEST");
 
-  const skip = (page - 1) * limit;
+  // Replace your basic .find() logic with this inside comment.controller.js
+const skip = (page - 1) * limit;
 
-  const comments = await Comment.find({ video: videoId })
-    .select("content createdAt owner")
-    .populate("owner", "username avatar fullName")
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit)
-    .lean();
+const comments = await Comment.aggregate([
+  {
+    $match: { video: new mongoose.Types.ObjectId(videoId) }
+  },
+  {
+    $lookup: {
+      from: "users",
+      localField: "owner",
+      foreignField: "_id",
+      as: "owner"
+    }
+  },
+  {
+    $lookup: {
+      from: "likes",
+      localField: "_id",
+      foreignField: "comment",
+      as: "likes"
+    }
+  },
+  {
+    $addFields: {
+      owner: { $first: "$owner" },
+      likesCount: { $size: "$likes" },
+      isLiked: {
+        $cond: {
+          if: { $in: [req.user?._id, "$likes.likedBy"] },
+          then: true,
+          else: false
+        }
+      }
+    }
+  },
+  { $sort: { createdAt: -1 } },
+  { $skip: skip },
+  { $limit: limit },
+  { $project: { likes: 0 } } // hide raw likes array
+]);
+
+// Then cache and return as normal
 
   await setCommentsCache(videoId, page, comments);
 

@@ -1,11 +1,11 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ThumbsUp } from "lucide-react";
 import { api } from "../api/axios";
 
-/** Relative time: "2 days ago", "just now", etc. */
 const timeAgo = (dateStr) => {
+  if (!dateStr) return "";
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
   if (seconds < 60) return "just now";
   const minutes = Math.floor(seconds / 60);
@@ -20,9 +20,16 @@ const timeAgo = (dateStr) => {
 };
 
 export const Comment = ({ comment }) => {
-  const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
+  // 1. Initialize from backend data, not 'false'
+  const [isLiked, setIsLiked] = useState(comment?.isLiked || false);
+  const [likeCount, setLikeCount] = useState(comment?.likesCount || comment?.likeCount || 0);
   const [pending, setPending] = useState(false);
+
+  // 2. The Interconnection Bridge: Resets state when switching videos in a playlist
+  useEffect(() => {
+    setIsLiked(comment?.isLiked || false);
+    setLikeCount(comment?.likesCount || comment?.likeCount || 0);
+  }, [comment]);
 
   const handleLikeToggle = useCallback(async () => {
     if (!comment?._id || pending) return;
@@ -30,7 +37,6 @@ export const Comment = ({ comment }) => {
     const prevLiked = isLiked;
     const prevCount = likeCount;
 
-    // Optimistic update
     setIsLiked(!prevLiked);
     setLikeCount((c) => (prevLiked ? Math.max(0, c - 1) : c + 1));
     setPending(true);
@@ -38,6 +44,7 @@ export const Comment = ({ comment }) => {
     try {
       const { data } = await api.post(`/like/toggle/c/${comment._id}`);
       const { action, totalLikes } = data.data || {};
+      
       setIsLiked(action === "like");
       if (typeof totalLikes === "number") setLikeCount(Math.max(0, totalLikes));
     } catch (err) {
@@ -51,7 +58,6 @@ export const Comment = ({ comment }) => {
 
   return (
     <div className="flex gap-3 my-4">
-      {/* Avatar */}
       <Link to={`/u/${comment.owner?.username}`} className="flex-shrink-0">
         <img
           src={comment.owner?.avatar || `https://ui-avatars.com/api/?name=${comment.owner?.username || "U"}&background=8fff00&bold=true`}
@@ -60,9 +66,7 @@ export const Comment = ({ comment }) => {
         />
       </Link>
 
-      {/* Body */}
       <div className="flex-1 min-w-0">
-        {/* Username + Timestamp */}
         <div className="flex items-baseline gap-2 mb-1.5">
           <Link
             to={`/u/${comment.owner?.username}`}
@@ -76,14 +80,12 @@ export const Comment = ({ comment }) => {
           </span>
         </div>
 
-        {/* Comment Content */}
         <div className="bg-white border-2 border-neoBlack p-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] mb-2">
           <p className="font-bold text-[15px] leading-relaxed break-words whitespace-pre-wrap">
             {comment.content}
           </p>
         </div>
 
-        {/* Like Button */}
         <motion.button
           onClick={handleLikeToggle}
           disabled={pending}
@@ -95,10 +97,7 @@ export const Comment = ({ comment }) => {
             ${isLiked ? "bg-[#00E1FF] text-black" : "bg-white text-black"}
           `}
         >
-          <ThumbsUp
-            size={14}
-            className={`stroke-[3] ${isLiked ? "fill-black/20" : ""}`}
-          />
+          <ThumbsUp size={14} className={`stroke-[3] ${isLiked ? "fill-black/20" : ""}`} />
           <span>{likeCount}</span>
         </motion.button>
       </div>
