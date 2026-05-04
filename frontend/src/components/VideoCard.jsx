@@ -66,13 +66,13 @@ export const VideoCard = memo(({ video, onDelete, onUpdate }) => {
   };
   
   return (
-    <div className="neo-card p-0 overflow-visible flex flex-col h-full bg-neoWhite hover:bg-neoYellow duration-300 group relative">
+    <div className="relative flex flex-col h-full p-0 overflow-visible duration-300 neo-card bg-neoWhite hover:bg-neoYellow group">
       {/* Video Link Area */}
-      <Link to={`/video/${video._id}`} className="relative border-b-4 border-neoBlack aspect-video block overflow-hidden">
+      <Link to={`/video/${video._id}`} className="relative block overflow-hidden border-b-4 border-neoBlack aspect-video">
         <img
           src={video.thumbnail}
           alt={video.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
         />
         <div className="absolute bottom-2 right-2 bg-neoBlack text-white px-2 py-1 font-bold text-sm border-2 border-neoBlack shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] tracking-widest">
           {formatDuration(duration)}
@@ -80,10 +80,10 @@ export const VideoCard = memo(({ video, onDelete, onUpdate }) => {
       </Link>
       
       {/* Info Area */}
-      <div className="p-4 flex gap-3 flex-1">
+      <div className="flex flex-1 gap-3 p-4">
         <Link 
           to={`/u/${video.owner?.username}`} 
-          className="flex-shrink-0 hover:scale-105 transition-transform"
+          className="flex-shrink-0 transition-transform hover:scale-105"
         >
           <img
             src={video.owner?.avatar || "https://ui-avatars.com/api/?name=User"}
@@ -93,21 +93,21 @@ export const VideoCard = memo(({ video, onDelete, onUpdate }) => {
         </Link>
         <div className="flex flex-col flex-1 overflow-hidden">
           <Link to={`/video/${video._id}`} className="block">
-            <h3 className="font-black text-lg line-clamp-2 leading-tight uppercase hover:underline decoration-4 underline-offset-2 break-words overflow-hidden">
+            <h3 className="overflow-hidden text-lg font-black leading-tight uppercase break-words line-clamp-2 hover:underline decoration-4 underline-offset-2">
               {video.title}
             </h3>
           </Link>
-          <Link to={`/u/${video.owner?.username}`} className="font-bold text-gray-700 mt-2 text-sm hover:underline">
+          <Link to={`/u/${video.owner?.username}`} className="mt-2 text-sm font-bold text-gray-700 hover:underline">
             {video.owner?.username || "Unknown Channel"}
           </Link>
-          <p className="text-xs font-bold text-gray-500 mt-1">
+          <p className="mt-1 text-xs font-bold text-gray-500">
             {video.views || 0} views • {new Date(video.createdAt).toLocaleDateString()}
           </p>
         </div>
       </div>
 
       {isOwner && (
-        <div className="absolute top-2 right-2 z-20">
+        <div className="absolute z-20 top-2 right-2">
           <button 
             onClick={(e) => { e.preventDefault(); setShowMenu(!showMenu); }}
             className="p-1 bg-neoWhite border-2 border-neoBlack shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-neoYellow"
@@ -119,13 +119,13 @@ export const VideoCard = memo(({ video, onDelete, onUpdate }) => {
             <div className="absolute top-full right-0 mt-2 bg-neoWhite border-4 border-neoBlack shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col w-32 z-30">
                <button 
                  onClick={(e) => { e.preventDefault(); setShowEditModal(true); setShowMenu(false); }}
-                 className="p-2 font-bold uppercase text-left hover:bg-neoCyan border-b-2 border-neoBlack"
+                 className="p-2 font-bold text-left uppercase border-b-2 hover:bg-neoCyan border-neoBlack"
                >
                  Edit
                </button>
                <button 
                  onClick={(e) => { e.preventDefault(); setShowDeleteModal(true); setShowMenu(false); }}
-                 className="p-2 font-bold uppercase text-left hover:bg-neoRed hover:text-white"
+                 className="p-2 font-bold text-left uppercase hover:bg-neoRed hover:text-white"
                >
                  Delete
                </button>
@@ -136,10 +136,10 @@ export const VideoCard = memo(({ video, onDelete, onUpdate }) => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
           <div className="bg-neoWhite border-4 border-neoBlack shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] max-w-md w-full p-8 animate-in zoom-in-95">
-             <h2 className="text-3xl font-black uppercase text-neoRed mb-4 border-b-4 border-neoBlack pb-2">Delete Video?</h2>
-             <p className="font-bold text-xl mb-8">Are you absolutely sure? This cannot be undone.</p>
+             <h2 className="pb-2 mb-4 text-3xl font-black uppercase border-b-4 text-neoRed border-neoBlack">Delete Video?</h2>
+             <p className="mb-8 text-xl font-bold">Are you absolutely sure? This cannot be undone.</p>
              <div className="flex gap-4">
                 <button 
                   onClick={() => setShowDeleteModal(false)}
@@ -161,28 +161,28 @@ export const VideoCard = memo(({ video, onDelete, onUpdate }) => {
 
       {/* Edit Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
           <div className="bg-neoWhite border-4 border-neoBlack shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] max-w-lg w-full p-8 animate-in zoom-in-95 flex flex-col">
-             <div className="flex justify-between items-center mb-6 border-b-4 border-neoBlack pb-4">
+             <div className="flex items-center justify-between pb-4 mb-6 border-b-4 border-neoBlack">
                <h2 className="text-3xl font-black uppercase">Edit Video</h2>
-               <button onClick={() => setShowEditModal(false)} className="hover:rotate-90 transition-transform">
+               <button onClick={() => setShowEditModal(false)} className="transition-transform hover:rotate-90">
                   <X size={32} className="stroke-[3]" />
                </button>
              </div>
              
-             <label className="font-black uppercase mb-2">Title</label>
+             <label className="mb-2 font-black uppercase">Title</label>
              <input 
                type="text" 
                value={editTitle} 
                onChange={e => setEditTitle(e.target.value)}
-               className="neo-input border-4 border-neoBlack p-3 mb-6 font-bold"
+               className="p-3 mb-6 font-bold border-4 neo-input border-neoBlack"
              />
              
-             <label className="font-black uppercase mb-2">Description</label>
+             <label className="mb-2 font-black uppercase">Description</label>
              <textarea 
                value={editDescription} 
                onChange={e => setEditDescription(e.target.value)}
-               className="neo-input border-4 border-neoBlack p-3 mb-8 font-bold h-32 resize-none"
+               className="h-32 p-3 mb-8 font-bold border-4 resize-none neo-input border-neoBlack"
              />
              
              <button 

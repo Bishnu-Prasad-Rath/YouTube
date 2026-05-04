@@ -364,7 +364,7 @@ const PlaylistCard = ({ playlist, idx, isOwner, onEdit, onDelete, onManage, onCl
       className="bg-white border-4 border-neoBlack shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] cursor-pointer overflow-hidden flex flex-col group hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-shadow"
     >
       {/* ── Card Top: Dynamic Thumbnail or EMPTY NEBULA ── */}
-      <div className="relative overflow-hidden border-b-4 h-36 border-neoBlack">
+      <div className="relative w-full overflow-hidden bg-black border-b-4 aspect-video border-neoBlack">
         {hasVideos && thumbUrl ? (
           <>
             <img

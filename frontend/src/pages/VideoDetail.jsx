@@ -200,9 +200,9 @@ export const VideoDetail = () => {
   console.log("Current Comments in State:", comments.length);
 
   return (
-    <div className="max-w-[1600px] mx-auto px-6 pb-12 flex flex-col lg:flex-row gap-8 pt-4">
-      {/* 70% Primary Video Area */}
-      <div className="flex-none lg:w-[65%] xl:w-[70%]">
+  <div className="max-w-[1600px] mx-auto px-6 pb-12 flex flex-col lg:flex-row gap-8 pt-4">
+  {/* 70% Primary Video Area */}
+  <div className="flex-none lg:w-[65%] xl:w-[70%]">
         
         {/* Custom Video Player */}
         <div ref={playerContainerRef} className="relative p-0 mb-6 border-4 neo-card border-neoBlack shadow-neo group bg-neoBlack">
