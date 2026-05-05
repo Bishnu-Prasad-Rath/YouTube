@@ -12,7 +12,7 @@ export const Home = () => {
         const { data } = await api.get("/videos");
         setVideos(data.data?.videos || data.data || []);
       } catch (error) {
-        console.error("Failed to fetch videos");
+        console.error("Failed to fetch videos", error);
 
         setVideos([]);
       } finally {
@@ -29,7 +29,7 @@ export const Home = () => {
       <h1 className="inline-block px-4 py-2 pb-4 mt-4 mb-8 text-4xl font-black tracking-tight uppercase border-b-4 border-neoBlack bg-neoYellow shadow-neo">
         Explore
       </h1>
-      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:gap-8">
         {videos.map((video) => (
           <VideoCard key={video._id} video={video} />
         ))}
