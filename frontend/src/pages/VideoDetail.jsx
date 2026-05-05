@@ -10,7 +10,7 @@ import { LikeButton } from "../components/LikeButton";
 import { motion } from "framer-motion";
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize } from "lucide-react";
 
-const SOCKET_URL = "http://localhost:8000";
+const SOCKET_URL = import.meta.env.VITE_API_URL.replace("/api/v1", "");
 
 export const VideoDetail = () => {
   const { videoId } = useParams();

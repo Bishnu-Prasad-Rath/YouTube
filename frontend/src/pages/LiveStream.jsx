@@ -9,7 +9,7 @@ import "@livekit/components-styles";
 import { LiveBadge } from "../components/LiveBadge";
 import { Settings, Heart } from "lucide-react";
 
-const SOCKET_URL = "http://localhost:8000"; // Ideally from env
+const SOCKET_URL = import.meta.env.VITE_API_URL.replace("/api/v1", ""); // Ideally from env
 
 const ConnectionMonitor = () => {
     const state = useConnectionState();

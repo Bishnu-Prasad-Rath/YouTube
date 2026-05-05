@@ -19,7 +19,7 @@ import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import "@livekit/components-styles";
 
-const SOCKET_URL = "http://localhost:8000";
+const SOCKET_URL = import.meta.env.VITE_API_URL.replace("/api/v1", "");
 
 const ConnectionMonitor = () => {
   const state = useConnectionState();

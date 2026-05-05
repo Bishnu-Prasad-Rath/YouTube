@@ -6,7 +6,7 @@ import { MessageSquare, Send, Heart, MoreVertical, X } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { io } from "socket.io-client";
 
-const SOCKET_URL = "http://localhost:8000";
+const SOCKET_URL = import.meta.env.VITE_API_URL.replace("/api/v1", "");
 
 const TweetCard = ({ tweet, currentUser, onToast, onDelete, onUpdate }) => {
   const [isLiked, setIsLiked] = useState(tweet.isLiked || false);
@@ -134,17 +134,17 @@ const TweetCard = ({ tweet, currentUser, onToast, onDelete, onUpdate }) => {
   return (
     <div className="neo-card bg-neoWhite border-4 border-neoBlack shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all relative">
       <div className="flex items-center gap-4 mb-4">
-        <div className="w-12 h-12 rounded-full border-2 border-neoBlack bg-neoYellow overflow-hidden shrink-0">
-          <img src={tweet.owner?.avatar || "https://ui-avatars.com/api/?name=U"} alt="Avatar" className="w-full h-full object-cover" />
+        <div className="w-12 h-12 overflow-hidden border-2 rounded-full border-neoBlack bg-neoYellow shrink-0">
+          <img src={tweet.owner?.avatar || "https://ui-avatars.com/api/?name=U"} alt="Avatar" className="object-cover w-full h-full" />
         </div>
         <div>
-          <p className="font-black text-lg uppercase leading-tight">{tweet.owner?.fullName || "User"}</p>
-          <p className="font-bold text-gray-500 text-sm">@{tweet.owner?.username || "unknown"} • {formatDistanceToNow(new Date(tweet.createdAt), { addSuffix: true })}</p>
+          <p className="text-lg font-black leading-tight uppercase">{tweet.owner?.fullName || "User"}</p>
+          <p className="text-sm font-bold text-gray-500">@{tweet.owner?.username || "unknown"} • {formatDistanceToNow(new Date(tweet.createdAt), { addSuffix: true })}</p>
         </div>
       </div>
-      <p className="font-bold text-lg whitespace-pre-wrap break-words overflow-hidden">{tweet.content}</p>
+      <p className="overflow-hidden text-lg font-bold break-words whitespace-pre-wrap">{tweet.content}</p>
       
-      <div className="mt-6 flex items-center gap-6 border-t-4 border-neoBlack pt-4 text-gray-700">
+      <div className="flex items-center gap-6 pt-4 mt-6 text-gray-700 border-t-4 border-neoBlack">
          <div 
            onClick={handleLike}
            className={`flex items-center gap-2 font-black cursor-pointer transition-colors ${isLiked ? 'text-neoRed' : 'hover:text-neoRed'} ${isLiking ? 'opacity-50 pointer-events-none' : ''}`}
@@ -154,7 +154,7 @@ const TweetCard = ({ tweet, currentUser, onToast, onDelete, onUpdate }) => {
          </div>
          <div 
            onClick={() => setShowReply(!showReply)}
-           className="flex items-center gap-2 font-black cursor-pointer hover:text-neoBlue transition-colors"
+           className="flex items-center gap-2 font-black transition-colors cursor-pointer hover:text-neoBlue"
          >
             <MessageSquare size={20} className="stroke-[3]" /> 
             <span>Reply</span>
@@ -163,7 +163,7 @@ const TweetCard = ({ tweet, currentUser, onToast, onDelete, onUpdate }) => {
 
       {/* Reply Box Logic */}
       {showReply && (
-        <div className="mt-4 flex gap-4 animate-in slide-in-from-top-2">
+        <div className="flex gap-4 mt-4 animate-in slide-in-from-top-2">
            <input 
              type="text" 
              value={replyText}
@@ -182,7 +182,7 @@ const TweetCard = ({ tweet, currentUser, onToast, onDelete, onUpdate }) => {
 
       {/* Render Replies */}
       {replies.length > 0 && (
-        <div className="mt-6 flex flex-col gap-4 ml-8 pl-6 border-l-4 border-neoBlack">
+        <div className="flex flex-col gap-4 pl-6 mt-6 ml-8 border-l-4 border-neoBlack">
           {replies
             .filter((v, i, a) => {
                const isFirst = a.findIndex(t => t._id === v._id || (t.content === v.content && t.owner?._id === v.owner?._id)) === i;
@@ -192,10 +192,10 @@ const TweetCard = ({ tweet, currentUser, onToast, onDelete, onUpdate }) => {
             .map(reply => (
             <div key={reply._id} className="bg-gray-100 border-2 border-neoBlack p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 rounded-full border-2 border-neoBlack overflow-hidden bg-neoYellow shrink-0">
-                  <img src={reply.owner?.avatar || "https://ui-avatars.com/api/?name=U"} className="w-full h-full object-cover" />
+                <div className="w-8 h-8 overflow-hidden border-2 rounded-full border-neoBlack bg-neoYellow shrink-0">
+                  <img src={reply.owner?.avatar || "https://ui-avatars.com/api/?name=U"} className="object-cover w-full h-full" />
                 </div>
-                <p className="font-bold text-sm uppercase">{reply.owner?.username}</p>
+                <p className="text-sm font-bold uppercase">{reply.owner?.username}</p>
                 <span className="text-xs font-bold text-gray-500">{formatDistanceToNow(new Date(reply.createdAt), { addSuffix: true })}</span>
               </div>
               <p className="font-bold text-gray-800">{reply.content}</p>
@@ -205,7 +205,7 @@ const TweetCard = ({ tweet, currentUser, onToast, onDelete, onUpdate }) => {
       )}
 
       {isOwner && (
-        <div className="absolute top-4 right-4 z-20">
+        <div className="absolute z-20 top-4 right-4">
           <button 
             onClick={(e) => { e.preventDefault(); setShowMenu(!showMenu); }}
             className="p-1 bg-neoWhite border-2 border-neoBlack shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-neoYellow"
@@ -234,10 +234,10 @@ const TweetCard = ({ tweet, currentUser, onToast, onDelete, onUpdate }) => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
           <div className="bg-neoWhite border-4 border-neoBlack shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] max-w-md w-full p-8 animate-in zoom-in-95">
-             <h2 className="text-3xl font-black uppercase text-neoRed mb-4 border-b-4 border-neoBlack pb-2">Delete Tweet?</h2>
-             <p className="font-bold text-xl mb-8">This action is permanent and cannot be reversed.</p>
+             <h2 className="pb-2 mb-4 text-3xl font-black uppercase border-b-4 text-neoRed border-neoBlack">Delete Tweet?</h2>
+             <p className="mb-8 text-xl font-bold">This action is permanent and cannot be reversed.</p>
              <div className="flex gap-4">
                 <button 
                   onClick={() => setShowDeleteModal(false)}
@@ -259,11 +259,11 @@ const TweetCard = ({ tweet, currentUser, onToast, onDelete, onUpdate }) => {
 
       {/* Edit Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
           <div className="bg-neoWhite border-4 border-neoBlack shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] max-w-lg w-full p-8 animate-in zoom-in-95 flex flex-col">
-             <div className="flex justify-between items-center mb-6 border-b-4 border-neoBlack pb-4">
+             <div className="flex items-center justify-between pb-4 mb-6 border-b-4 border-neoBlack">
                <h2 className="text-3xl font-black uppercase">Edit Tweet</h2>
-               <button onClick={() => setShowEditModal(false)} className="hover:rotate-90 transition-transform">
+               <button onClick={() => setShowEditModal(false)} className="transition-transform hover:rotate-90">
                   <X size={32} className="stroke-[3]" />
                </button>
              </div>
@@ -271,7 +271,7 @@ const TweetCard = ({ tweet, currentUser, onToast, onDelete, onUpdate }) => {
              <textarea 
                value={editContent} 
                onChange={e => setEditContent(e.target.value)}
-               className="neo-input border-4 border-neoBlack p-3 mb-8 font-bold h-32 resize-none"
+               className="h-32 p-3 mb-8 font-bold border-4 resize-none neo-input border-neoBlack"
              />
              
              <button 
@@ -346,15 +346,15 @@ export const Tweets = ({ userId }) => {
     }
   };
 
-  if (loading) return <div className="text-center font-black text-2xl uppercase animate-pulse mt-8">Loading Tweets...</div>;
+  if (loading) return <div className="mt-8 text-2xl font-black text-center uppercase animate-pulse">Loading Tweets...</div>;
 
   const isOwner = currentUser?._id === targetUserId && !isGlobalFeed;
 
   return (
-    <div className="flex flex-col gap-8 max-w-3xl mx-auto w-full pt-4">
+    <div className="flex flex-col w-full max-w-3xl gap-8 pt-4 mx-auto">
       {(isOwner || isGlobalFeed) && (
         <div className="neo-card bg-neoYellow border-4 border-neoBlack shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6">
-          <h2 className="font-black uppercase text-2xl mb-4 flex items-center gap-2">
+          <h2 className="flex items-center gap-2 mb-4 text-2xl font-black uppercase">
             <MessageSquare className="stroke-[3]" /> Drop a Tweet
           </h2>
           <textarea 
@@ -377,8 +377,8 @@ export const Tweets = ({ userId }) => {
 
       <div className="flex flex-col gap-6 mb-12">
         {tweets.length === 0 ? (
-           <div className="text-center p-12 neo-card border-dashed border-4 border-neoBlack bg-neoWhite">
-             <p className="font-black uppercase text-2xl">No tweets here.</p>
+           <div className="p-12 text-center border-4 border-dashed neo-card border-neoBlack bg-neoWhite">
+             <p className="text-2xl font-black uppercase">No tweets here.</p>
            </div>
         ) : (
           tweets.map((tweet) => (
