@@ -1,6 +1,9 @@
 import IORedis from "ioredis";
 
-const redisClient = new IORedis(process.env.REDIS_URL || "redis://127.0.0.1:6379");
+// Add the options object with maxRetriesPerRequest: null
+const redisClient = new IORedis(process.env.REDIS_URL || "redis://127.0.0.1:6379", {
+  maxRetriesPerRequest: null,
+});
 
 redisClient.on("connect", () => {
   console.log("Redis is connecting...");
@@ -17,9 +20,9 @@ redisClient.on("error", (err) => {
 const connectRedis = async () => {
   try {
     // ioredis auto-connects, no need for .connect()
-    console.log("✅ Redis connected successfully");
+    console.log("✅ Redis initialization complete");
   } catch (error) {
-    console.log("❌ Redis connection failed:", error);
+    console.log("❌ Redis initialization failed:", error);
   }
 };
 
