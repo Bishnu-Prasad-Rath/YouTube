@@ -129,20 +129,23 @@ const CustomControls = ({ containerRef, onEndStream }) => {
     }
   };
 
-  const toggleScreenShare = async () => {
+const toggleScreenShare = async () => {
     if (!localParticipant) return;
     try {
+      // 👇 ADD THIS WARNING BEFORE THEY SHARE 👇
+      if (!isSharing) {
+        alert("💡 AUDIO TIP: To share your system sound (music, games, videos), you MUST check the 'Share system audio' or 'Also share tab audio' box in the popup that is about to appear.\n\n(Mac Users: You can only share audio by choosing 'Chrome Tab').");
+      }
+
       await localParticipant.setScreenShareEnabled(!isSharing, { audio: true });
       setIsSharing(!isSharing);
     } catch (error) {
       console.error("Screen Share Error:", error);
       if (error.name === "NotAllowedError") {
-        // The user clicked "Cancel" on the screen share popup.
-        // We just log it quietly instead of showing an alert to avoid annoying them.
         console.log("User canceled screen share selection.");
       } else {
         alert(
-          "❌ SCREEN SHARE ERROR: Your browser or operating system is blocking screen recording. Check your Mac/Windows system settings.",
+          "❌ SCREEN SHARE ERROR: Your browser or operating system is blocking screen recording. Check your Mac/Windows system settings."
         );
       }
     }
