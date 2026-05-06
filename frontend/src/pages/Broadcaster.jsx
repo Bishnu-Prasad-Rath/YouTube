@@ -73,7 +73,7 @@ const CustomControls = ({ containerRef, onEndStream }) => {
   const micPub = localParticipant?.getTrackPublication(Track.Source.Microphone);
   const volume = useTrackVolume(micPub?.track);
 
-const toggleMic = async () => {
+  const toggleMic = async () => {
     if (!localParticipant) return;
     try {
       if (!isMicEnabled) {
@@ -86,10 +86,17 @@ const toggleMic = async () => {
       }
     } catch (error) {
       console.error("Mic Error:", error);
-      if (error.name === "NotAllowedError" || error.message?.includes("Permission denied")) {
-        alert("🚨 MIC BLOCKED: Please click the 'Lock' icon next to the URL bar at the top of your browser, allow Microphone access, and refresh the page.");
+      if (
+        error.name === "NotAllowedError" ||
+        error.message?.includes("Permission denied")
+      ) {
+        alert(
+          "🚨 MIC BLOCKED: Please click the 'Lock' icon next to the URL bar at the top of your browser, allow Microphone access, and refresh the page.",
+        );
       } else {
-        alert("❌ MIC ERROR: Could not access your microphone. Make sure it is plugged in.");
+        alert(
+          "❌ MIC ERROR: Could not access your microphone. Make sure it is plugged in.",
+        );
       }
     }
   };
@@ -100,12 +107,24 @@ const toggleMic = async () => {
       await localParticipant.setCameraEnabled(!isCamEnabled);
     } catch (error) {
       console.error("Camera Error:", error);
-      if (error.name === "NotAllowedError" || error.message?.includes("Permission denied")) {
-        alert("🚨 CAMERA BLOCKED: Please click the 'Lock' icon next to the URL bar at the top of your browser, allow Camera access, and refresh the page.");
-      } else if (error.name === "NotReadableError" || error.message?.includes("Device in use")) {
-        alert("⚠️ CAMERA IN USE: Another app (like Zoom, Teams, or OBS) is currently using your camera. Please close that app and try again.");
+      if (
+        error.name === "NotAllowedError" ||
+        error.message?.includes("Permission denied")
+      ) {
+        alert(
+          "🚨 CAMERA BLOCKED: Please click the 'Lock' icon next to the URL bar at the top of your browser, allow Camera access, and refresh the page.",
+        );
+      } else if (
+        error.name === "NotReadableError" ||
+        error.message?.includes("Device in use")
+      ) {
+        alert(
+          "⚠️ CAMERA IN USE: Another app (like Zoom, Teams, or OBS) is currently using your camera. Please close that app and try again.",
+        );
       } else {
-        alert("❌ HARDWARE ERROR: Could not start the camera. Please make sure it is plugged in and turned on.");
+        alert(
+          "❌ HARDWARE ERROR: Could not start the camera. Please make sure it is plugged in and turned on.",
+        );
       }
     }
   };
@@ -118,11 +137,13 @@ const toggleMic = async () => {
     } catch (error) {
       console.error("Screen Share Error:", error);
       if (error.name === "NotAllowedError") {
-         // The user clicked "Cancel" on the screen share popup. 
-         // We just log it quietly instead of showing an alert to avoid annoying them.
-         console.log("User canceled screen share selection.");
+        // The user clicked "Cancel" on the screen share popup.
+        // We just log it quietly instead of showing an alert to avoid annoying them.
+        console.log("User canceled screen share selection.");
       } else {
-         alert("❌ SCREEN SHARE ERROR: Your browser or operating system is blocking screen recording. Check your Mac/Windows system settings.");
+        alert(
+          "❌ SCREEN SHARE ERROR: Your browser or operating system is blocking screen recording. Check your Mac/Windows system settings.",
+        );
       }
     }
   };
@@ -408,6 +429,41 @@ export const Broadcaster = () => {
   const navigate = useNavigate();
   const videoContainerRef = useRef(null);
 
+  const isLiveRef = useRef(isLive);
+  const liveIdRef = useRef(liveId);
+
+  //  2. KEEP REFS IN SYNC
+  useEffect(() => {
+    isLiveRef.current = isLive;
+    liveIdRef.current = liveId;
+  }, [isLive, liveId]);
+
+  // 👇 3. THE TAB-CLOSE GHOST BUSTER 👇
+  useEffect(() => {
+    const killStreamOnExit = () => {
+      // If the user is live and we have an ID, kill it!
+      if (isLiveRef.current && liveIdRef.current) {
+        const baseUrl = import.meta.env.VITE_API_URL;
+
+        // fetch with 'keepalive' forces the request to finish even if the tab closes!
+        fetch(`${baseUrl}/live/end/${liveIdRef.current}`, {
+          method: "PATCH",
+          keepalive: true,
+          credentials: "include", // Keeps your auth working
+        }).catch(console.error);
+      }
+    };
+
+    // Fires when closing the tab or hitting refresh
+    window.addEventListener("beforeunload", killStreamOnExit);
+
+    // Fires when clicking a link to navigate away (like hitting the 'Back' button)
+    return () => {
+      window.removeEventListener("beforeunload", killStreamOnExit);
+      killStreamOnExit();
+    };
+  }, []);
+
   useEffect(() => {
     const cleanOldStreams = async () => {
       try {
@@ -417,7 +473,7 @@ export const Broadcaster = () => {
         console.error("Failed to clean up stuck streams:", error);
       }
     };
-    
+
     cleanOldStreams();
   }, []);
 
@@ -446,10 +502,15 @@ export const Broadcaster = () => {
 
   const handleEndStream = async () => {
     try {
+      // Tell the Ghost Buster we are handling it manually, so it doesn't double-fire!
+      isLiveRef.current = false;
+
       await api.patch(`/live/end/${liveId}`);
       setIsLive(false);
       navigate("/live");
     } catch (err) {
+      // If it fails, turn the Ghost Buster back on
+      isLiveRef.current = true;
       console.error(err);
     }
   };
@@ -479,12 +540,12 @@ export const Broadcaster = () => {
           Pro Studio
         </h1>
         {isLive && (
-<button
-  onClick={handleEndStream}
-  className="bg-[#ff0055] text-white border-[4px] border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-[#ffaa00] hover:text-black hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 active:shadow-none active:translate-y-[6px] active:translate-x-[6px] transition-all font-black text-lg uppercase tracking-widest py-3 px-8"
->
-  End Stream
-</button>
+          <button
+            onClick={handleEndStream}
+            className="bg-[#ff0055] text-white border-[4px] border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-[#ffaa00] hover:text-black hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 active:shadow-none active:translate-y-[6px] active:translate-x-[6px] transition-all font-black text-lg uppercase tracking-widest py-3 px-8"
+          >
+            End Stream
+          </button>
         )}
       </div>
 
