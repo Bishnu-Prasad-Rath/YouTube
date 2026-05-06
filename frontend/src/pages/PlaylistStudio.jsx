@@ -439,15 +439,28 @@ export const PlaylistStudio = ({ userId }) => {
   const navigate = useNavigate();
 
   // ── Fetch ────────────────────────────────────────────────
-  const fetchPlaylists = useCallback(async (uid) => {
-    if (!uid || !isValidObjectId(uid)) return;
+  // ── Fetch ────────────────────────────────────────────────
+  const fetchPlaylists = useCallback(async (currentTab, uid) => {
     setLoading(true);
     try {
-      const { data } = await api.get(`/playlist/user/${uid}`);
+      // If Discovery is clicked, hit our new global route!
+      const endpoint = currentTab === "discovery" 
+        ? "/playlist/all" 
+        : `/playlist/user/${uid}`;
+
+      const { data } = await api.get(endpoint);
       setPlaylists(data.data || []);
-    } catch (err) { console.error("Fetch playlists failed", err); }
-    finally { setLoading(false); }
+    } catch (err) { 
+      console.error("Fetch playlists failed", err); 
+    } finally { 
+      setLoading(false); 
+    }
   }, []);
+
+  useEffect(() => {
+    // We pass the active tab and the target user ID to the fetch function
+    fetchPlaylists(tab, targetUserId);
+  }, [tab, targetUserId, fetchPlaylists]);
 
   useEffect(() => {
     const uid = tab === "studio" ? currentUser?._id : targetUserId;

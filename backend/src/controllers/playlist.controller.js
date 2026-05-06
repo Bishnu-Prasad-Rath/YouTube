@@ -169,6 +169,24 @@ const updatePlaylist = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, playlist, "Playlist updated successfully"));
 });
 
+const getAllPlaylists = asyncHandler(async (req, res) => {
+  // Finds every playlist, populates the videos, and sorts by newest
+  const playlists = await Playlist.find()
+    .populate({
+      path: "videos",
+      select: "thumbnail title",
+    })
+    .populate({
+      path: "owner",
+      select: "username avatar",
+    })
+    .sort({ createdAt: -1 });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, playlists, "Global playlists fetched successfully"));
+});
+
 export {
   createPlaylist,
   getUserPlaylists,
@@ -177,4 +195,5 @@ export {
   removeVideoFromPlaylist,
   deletePlaylist,
   updatePlaylist,
+  getAllPlaylists,
 };

@@ -7,6 +7,7 @@ import {
   getUserPlaylists,
   removeVideoFromPlaylist,
   updatePlaylist,
+  getAllPlaylists,
 } from "../controllers/playlist.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { rateLimitMiddleware } from "../middlewares/rateLimit.middleware.js";
@@ -23,8 +24,18 @@ router
   );
 
 router
+  .route("/all")
+  .get(
+    rateLimitMiddleware({ windowSize: 10, maxRequests: 25 }),
+    getAllPlaylists
+  );
+  
+router
   .route("/:playlistId")
-  .get(rateLimitMiddleware({ windowSize: 10, maxRequests: 25 }), getPlaylistById)
+  .get(
+    rateLimitMiddleware({ windowSize: 10, maxRequests: 25 }),
+    getPlaylistById
+  )
   .patch(
     rateLimitMiddleware({ windowSize: 60, maxRequests: 5 }),
     updatePlaylist
