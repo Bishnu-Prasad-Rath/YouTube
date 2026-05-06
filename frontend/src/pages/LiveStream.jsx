@@ -190,12 +190,15 @@ const ViewerVideoArea = () => {
                     </div>
                 )}
 
-                {isPlaying && audioTracks.length > 0 && (
+                {/*  REPLACE YOUR OLD AUDIOTRACK BLOCK WITH THIS  */}
+                {isPlaying && audioTracks.map((track, index) => (
                     <AudioTrack 
-                        trackRef={audioTracks[0]}
+                        key={`${track.publication?.trackSid || index}`}
+                        trackRef={track}
                         volume={volume}
                     />
-                )}
+                ))}
+                {/*  END OF NEW BLOCK  */}
 
                 <LiveStreamHeader />
                 <ViewerControls 
