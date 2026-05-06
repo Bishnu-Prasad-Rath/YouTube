@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import { api } from "../api/axios";
 import { useAuth } from "../context/AuthContext";
-import { LiveKitRoom, useParticipants, useConnectionState, useTracks, VideoTrack, AudioTrack } from "@livekit/components-react";
+import { LiveKitRoom, useParticipants, useConnectionState, useTracks, VideoTrack, RoomAudioRenderer } from "@livekit/components-react";
 import { ConnectionState, Track, VideoQuality } from "livekit-client";
 import "@livekit/components-styles";
 import { LiveBadge } from "../components/LiveBadge";
@@ -115,7 +115,8 @@ const ViewerControls = ({ isPlaying, setIsPlaying, volume, setVolume, containerR
 
 const ViewerVideoArea = () => {
     const videoTracks = useTracks([Track.Source.Camera, Track.Source.ScreenShare], { onlySubscribed: true });
-    const audioTracks = useTracks([Track.Source.Microphone, Track.Source.ScreenShareAudio], { onlySubscribed: true });
+    // We fetch the audio tracks here just so our volume useEffect knows when a new track arrives!
+    const audioTracks = useTracks([Track.Source.Microphone, Track.Source.ScreenShareAudio]);
 
     const screenTrack = videoTracks.find(t => t.source === Track.Source.ScreenShare);
     const camTrack = videoTracks.find(t => t.source === Track.Source.Camera);
@@ -128,21 +129,16 @@ const ViewerVideoArea = () => {
     useEffect(() => {
         if (screenTrack?.publication) {
             if (forcedQuality === "AUTO") {
-                // Remove override by setting to highest or letting adaptive take over.
-                // LiveKit's adaptiveStream will naturally control it, but if we forced it earlier,
-                // we might need to reset. Typically setting to HIGH re-enables standard scale if adaptive is on.
                 screenTrack.publication.setVideoQuality(VideoQuality.HIGH);
             } else {
                 screenTrack.publication.setVideoQuality(forcedQuality);
             }
         }
         if (camTrack?.publication && forcedQuality !== "AUTO") {
-             // Scale camera track down if user explicitly wants low quality
              camTrack.publication.setVideoQuality(forcedQuality);
         }
     }, [forcedQuality, screenTrack, camTrack]);
 
-    // Fullscreen API Listener for High-Definition
     useEffect(() => {
         const handleFullscreenChange = () => {
             const isFullscreen = !!document.fullscreenElement;
@@ -152,10 +148,24 @@ const ViewerVideoArea = () => {
                 }
             }
         };
-
         document.addEventListener('fullscreenchange', handleFullscreenChange);
         return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
     }, [screenTrack, forcedQuality]);
+
+    // 👇 THE BULLETPROOF VOLUME SYNC 👇
+    useEffect(() => {
+        const syncVolume = () => {
+            // Finds every hidden audio element LiveKit creates and syncs your volume slider to them
+            const audioElements = document.getElementsByTagName('audio');
+            for (let i = 0; i < audioElements.length; i++) {
+                audioElements[i].volume = volume;
+            }
+        };
+        syncVolume();
+        // Backup sync to ensure it catches tracks that take a split-second to mount
+        const timer = setTimeout(syncVolume, 250);
+        return () => clearTimeout(timer);
+    }, [volume, audioTracks, isPlaying]);
 
     const videoContent = useMemo(() => {
         return (
@@ -190,15 +200,8 @@ const ViewerVideoArea = () => {
                     </div>
                 )}
 
-                {/*  REPLACE YOUR OLD AUDIOTRACK BLOCK WITH THIS  */}
-                {isPlaying && audioTracks.map((track, index) => (
-                    <AudioTrack 
-                        key={`${track.publication?.trackSid || index}`}
-                        trackRef={track}
-                        volume={volume}
-                    />
-                ))}
-                {/*  END OF NEW BLOCK  */}
+                {/* 👇 THE MASTER AUDIO ENGINE 👇 */}
+                {isPlaying && <RoomAudioRenderer />}
 
                 <LiveStreamHeader />
                 <ViewerControls 
