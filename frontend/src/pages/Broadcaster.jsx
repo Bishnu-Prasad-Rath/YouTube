@@ -73,27 +73,58 @@ const CustomControls = ({ containerRef, onEndStream }) => {
   const micPub = localParticipant?.getTrackPublication(Track.Source.Microphone);
   const volume = useTrackVolume(micPub?.track);
 
-  const toggleMic = async () => {
+const toggleMic = async () => {
     if (!localParticipant) return;
-    if (!isMicEnabled) {
-      console.log("Enabling mic with deviceId:", selectedMicId || "default");
-      await localParticipant.setMicrophoneEnabled(true, {
-        deviceId: selectedMicId || "default",
-      });
-    } else {
-      await localParticipant.setMicrophoneEnabled(false);
+    try {
+      if (!isMicEnabled) {
+        console.log("Enabling mic with deviceId:", selectedMicId || "default");
+        await localParticipant.setMicrophoneEnabled(true, {
+          deviceId: selectedMicId || "default",
+        });
+      } else {
+        await localParticipant.setMicrophoneEnabled(false);
+      }
+    } catch (error) {
+      console.error("Mic Error:", error);
+      if (error.name === "NotAllowedError" || error.message?.includes("Permission denied")) {
+        alert("🚨 MIC BLOCKED: Please click the 'Lock' icon next to the URL bar at the top of your browser, allow Microphone access, and refresh the page.");
+      } else {
+        alert("❌ MIC ERROR: Could not access your microphone. Make sure it is plugged in.");
+      }
     }
   };
 
   const toggleCam = async () => {
     if (!localParticipant) return;
-    await localParticipant.setCameraEnabled(!isCamEnabled);
+    try {
+      await localParticipant.setCameraEnabled(!isCamEnabled);
+    } catch (error) {
+      console.error("Camera Error:", error);
+      if (error.name === "NotAllowedError" || error.message?.includes("Permission denied")) {
+        alert("🚨 CAMERA BLOCKED: Please click the 'Lock' icon next to the URL bar at the top of your browser, allow Camera access, and refresh the page.");
+      } else if (error.name === "NotReadableError" || error.message?.includes("Device in use")) {
+        alert("⚠️ CAMERA IN USE: Another app (like Zoom, Teams, or OBS) is currently using your camera. Please close that app and try again.");
+      } else {
+        alert("❌ HARDWARE ERROR: Could not start the camera. Please make sure it is plugged in and turned on.");
+      }
+    }
   };
 
   const toggleScreenShare = async () => {
     if (!localParticipant) return;
-    await localParticipant.setScreenShareEnabled(!isSharing, { audio: true });
-    setIsSharing(!isSharing);
+    try {
+      await localParticipant.setScreenShareEnabled(!isSharing, { audio: true });
+      setIsSharing(!isSharing);
+    } catch (error) {
+      console.error("Screen Share Error:", error);
+      if (error.name === "NotAllowedError") {
+         // The user clicked "Cancel" on the screen share popup. 
+         // We just log it quietly instead of showing an alert to avoid annoying them.
+         console.log("User canceled screen share selection.");
+      } else {
+         alert("❌ SCREEN SHARE ERROR: Your browser or operating system is blocking screen recording. Check your Mac/Windows system settings.");
+      }
+    }
   };
 
   const toggleFullscreen = () => {
@@ -376,6 +407,19 @@ export const Broadcaster = () => {
   const [title, setTitle] = useState("");
   const navigate = useNavigate();
   const videoContainerRef = useRef(null);
+
+  useEffect(() => {
+    const cleanOldStreams = async () => {
+      try {
+        await api.get("/live/util/cleanup");
+        console.log("System check: Zombie streams wiped out!");
+      } catch (error) {
+        console.error("Failed to clean up stuck streams:", error);
+      }
+    };
+    
+    cleanOldStreams();
+  }, []);
 
   const handleStartStream = async () => {
     if (!title) return alert("Enter a stream title!");
