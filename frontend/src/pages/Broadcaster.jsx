@@ -325,7 +325,7 @@ const MetricsPanel = () => {
   return metricsContent;
 };
 
-const CustomChat = ({ liveId }) => {
+const CustomChat = ({ liveId, isBroadcaster }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const bottomRef = useRef(null);
@@ -340,6 +340,10 @@ const CustomChat = ({ liveId }) => {
 
     socketRef.current.emit("join-live", liveId);
 
+    if (isBroadcaster) {
+      socketRef.current.emit("broadcaster-connected", liveId);
+    }
+
     socketRef.current.on("new-message", (msg) => {
       setMessages((prev) => [...prev, msg].slice(-50));
     });
@@ -347,7 +351,7 @@ const CustomChat = ({ liveId }) => {
     return () => {
       socketRef.current.disconnect();
     };
-  }, [liveId]);
+  }, [liveId, isBroadcaster]);
 
   useEffect(() => {
     if (bottomRef.current) {
@@ -408,14 +412,15 @@ const CustomChat = ({ liveId }) => {
   );
 };
 
-const LiveChatArea = ({ liveId }) => {
+const LiveChatArea = ({ liveId, isBroadcaster }) => {
   return (
     <div className="relative flex flex-col flex-1 min-h-0 bg-zinc-900">
       <div className="absolute top-0 w-full p-4 bg-neoYellow border-b-4 border-neoBlack font-black text-xl uppercase tracking-widest text-center shadow-[0_4px_0_0_rgba(0,0,0,1)] z-10">
         Live Chat
       </div>
       <div className="relative flex-1 w-full overflow-hidden">
-        <CustomChat liveId={liveId} />
+        {/* Pass it down here 👇 */}
+        <CustomChat liveId={liveId} isBroadcaster={isBroadcaster} />
       </div>
     </div>
   );
@@ -598,7 +603,7 @@ export const Broadcaster = () => {
               {/* Right Column: 25% Chat & Metrics */}
               <div className="w-full lg:w-[25%] h-[50vh] lg:h-full border-t-8 lg:border-t-0 lg:border-l-8 border-neoBlack bg-zinc-900 flex flex-col relative z-10">
                 <MetricsPanel />
-                <LiveChatArea liveId={liveId} />
+                <LiveChatArea liveId={liveId} isBroadcaster={true} />
               </div>
             </LiveKitRoom>
           )}

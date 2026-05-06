@@ -1,4 +1,6 @@
 import { redisClient } from "../config/redis.config.js";
+// 👇 1. ADD THIS IMPORT AT THE TOP 👇
+import { Live } from "../models/live.model.js"; 
 
 const initSocket = (io) => {
   io.on("connection", (socket) => {
@@ -41,6 +43,12 @@ const initSocket = (io) => {
 
     socket.on("leave:tweet", (tweetId) => {
       socket.leave(`tweet:${tweetId}`);
+    });
+
+    // 👇 2. ADD THIS NEW LISTENER FOR THE BROADCASTER 👇
+    socket.on("broadcaster-connected", (liveId) => {
+      socket.broadcasterLiveId = liveId; // Tag this socket as the boss!
+      console.log(`🎥 Broadcaster registered for stream: ${liveId}`);
     });
 
     socket.on("join-live", async (liveId) => {
@@ -87,12 +95,23 @@ const initSocket = (io) => {
       try {
         console.log("❌ Disconnected:", socket.id);
 
+        // 👇 3. ADD THE KILL SWITCH IF THE BROADCASTER DISCONNECTS 👇
+        if (socket.broadcasterLiveId) {
+          console.log(`🚨 Broadcaster tab closed! Killing stream: ${socket.broadcasterLiveId}`);
+          
+          await Live.findByIdAndUpdate(
+            socket.broadcasterLiveId, 
+            { isLive: false, isActive: false }
+          );
+        }
+
+        // ✅ Your existing viewer decrement logic stays exactly the same!
         if (socket.liveId) {
           const key = `live:${socket.liveId}:viewers`;
 
           let viewers = await redisClient.decr(key);
 
-          // ✅ prevent negative
+          // prevent negative
           if (viewers < 0) {
             viewers = 0;
             await redisClient.set(key, 0);
