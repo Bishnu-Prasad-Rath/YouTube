@@ -220,7 +220,7 @@ export const Profile = () => {
                <h3 className="text-xl font-black text-gray-700 uppercase">Subscribers</h3>
                <p className="mt-2 text-5xl font-black">{dashboardStats.totalSubscribers}</p>
             </div>
-            <div className="neo-card bg-pink-400 p-6 border-4 border-neoBlack shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] text-white">
+            <div className="neo-card bg-pink-400 p-6 border-4 border-neoBlack shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] text-black">
                <h3 className="text-xl font-black uppercase">Total Likes</h3>
                <p className="mt-2 text-5xl font-black">{dashboardStats.totalLikes}</p>
             </div>
