@@ -499,8 +499,12 @@ const PlaylistCard = ({
       layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-      transition={{ duration: 0.3, delay: idx * 0.1 }}
+      exit={{ opacity: 0, y: 10, transition: { duration: 0.2 } }}
+      transition={{
+        duration: 0.4,
+        ease: "easeOut",
+        delay: idx * 0.1,
+      }}
       onClick={onClick}
       style={{ "--hover-bg": hoverColor }}
       className="w-full bg-white border-[4px] border-neoBlack shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] cursor-pointer flex flex-col group hover:-translate-y-2 hover:-translate-x-2 hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:bg-[var(--hover-bg)] transition-all duration-200"
