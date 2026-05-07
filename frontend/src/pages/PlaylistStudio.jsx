@@ -495,19 +495,21 @@ const PlaylistCard = ({
   const hoverColor = BRUTALIST_COLORS[colorIndex];
 
   return (
-    <motion.div
-      // 👇 Notice 'layout' has been completely removed to stop the snapping bug!
+<motion.div
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-      transition={{
-        duration: 0.4,
-        ease: "easeOut",
-        delay: idx * 0.08, // Faster delay prevents the browser from showing it early
+      transition={{ 
+        duration: 0.4, 
+        ease: "easeOut", 
+        delay: idx * 0.08 
       }}
+      // 👇 1. Let Framer Motion handle the hover movement safely (-8px = tailwind's -2)
+      whileHover={{ y: -8, x: -8 }} 
       onClick={onClick}
       style={{ "--hover-bg": hoverColor }}
-      className="w-full bg-white border-[4px] border-neoBlack shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] cursor-pointer flex flex-col group hover:-translate-y-2 hover:-translate-x-2 hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:bg-[var(--hover-bg)] transition-all duration-200"
+      // 👇 2. Removed 'transition-all' and 'hover:-translate'. CSS only handles colors & shadows now!
+      className="w-full bg-white border-[4px] border-neoBlack shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] cursor-pointer flex flex-col group hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:bg-[var(--hover-bg)] transition-colors transition-shadow duration-200"
     >
       <div className="relative w-full overflow-hidden border-b-[4px] aspect-video border-neoBlack bg-black">
         {hasVideos && thumbUrl ? (
