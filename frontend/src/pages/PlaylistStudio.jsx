@@ -496,14 +496,14 @@ const PlaylistCard = ({
 
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, y: 20 }}
+      // 👇 Notice 'layout' has been completely removed to stop the snapping bug!
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 10, transition: { duration: 0.2 } }}
+      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
       transition={{
         duration: 0.4,
         ease: "easeOut",
-        delay: idx * 0.1,
+        delay: idx * 0.08, // Faster delay prevents the browser from showing it early
       }}
       onClick={onClick}
       style={{ "--hover-bg": hoverColor }}
