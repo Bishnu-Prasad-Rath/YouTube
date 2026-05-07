@@ -11,7 +11,7 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        // 👇 Changed from an Object to a Function 👇
+        // Changed from an Object to a Function 
         manualChunks(id) {
           if (id.includes('node_modules')) {
             // Core React & Router
