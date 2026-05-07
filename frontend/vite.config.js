@@ -11,13 +11,22 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Core React & Router
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          // Heavy Live Streaming Engine
-          livekit: ['@livekit/components-react', 'livekit-client'],
-          // Sockets, Charts, and Icons
-          ui: ['recharts', 'lucide-react', 'socket.io-client']
+        // 👇 Changed from an Object to a Function 👇
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            // Core React & Router
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+              return 'vendor';
+            }
+            // Heavy Live Streaming Engine
+            if (id.includes('@livekit') || id.includes('livekit-client')) {
+              return 'livekit';
+            }
+            // Sockets, Charts, and Icons
+            if (id.includes('recharts') || id.includes('lucide-react') || id.includes('socket.io-client')) {
+              return 'ui';
+            }
+          }
         }
       }
     }
