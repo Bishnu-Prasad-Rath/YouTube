@@ -1,21 +1,25 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { errorHandler } from "./middlewares/error.middleware.js";
 import  helmet  from "helmet";
+import { errorHandler } from "./middlewares/error.middleware.js";
+
 
 const app = express();
 
 app.use(helmet());
-
 app.disable("x-powered-by");
-
 
 app.use(cors({
   origin: process.env.CORS_ORIGIN, // Adjust to match your frontend URL
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
 }));
+
+import healthCheckRouter from "./routes/healthcheck.routes.js";
+import { healthcheckLimiter } from "./middlewares/healthcheckRateLimit.middleware.js";
+
+app.use("/api/v1/healthCheck", healthCheckRouter);  //I will trigger teh cold start from render.
 
 app.use(
   express.json({
@@ -44,11 +48,9 @@ import commentRouter from "./routes/comment.routes.js";
 import playlistRouter from "./routes/playlist.routes.js";
 import subscriptionRouter from "./routes/subscription.routes.js";
 import dashboardRouter from "./routes/dashboard.routes.js";
-import healthCheckRouter from "./routes/healthcheck.routes.js";
 import liveRouter from "./routes/live.routes.js";
 
 //Routes delcaration
-
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/videos", videoRouter);
 app.use("/api/v1/live", liveRouter);
@@ -58,7 +60,6 @@ app.use("/api/v1/comment", commentRouter);
 app.use("/api/v1/playlist", playlistRouter);
 app.use("/api/v1/subscription", subscriptionRouter);
 app.use("/api/v1/dashboard", dashboardRouter);
-app.use("/api/v1/healthCheck", healthCheckRouter);
 
 app.use(errorHandler);
 
