@@ -1,6 +1,7 @@
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
+import router from "./user.routes.js";
 
 const healthcheck = asyncHandler(async (req, res) => {
     // 1. Extract the secret key from the request headers
@@ -25,6 +26,4 @@ const healthcheck = asyncHandler(async (req, res) => {
     )
 })
 
-export {
-    healthcheck
-}
+export default router;
