@@ -19,7 +19,6 @@ owner : {
 } 
 },{timestamps : true})
 
-
 const Playlist = mongoose.model("Playlist",playlistSchema)
 
 export {Playlist}
