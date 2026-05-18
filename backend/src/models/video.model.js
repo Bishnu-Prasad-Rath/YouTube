@@ -33,10 +33,15 @@ const videoSchema = new Schema({
     },
     owner : {
         type : Schema.Types.ObjectId,
-        ref : "User"
+        ref : "User",
     }
 },{timestamps : true})
 
 videoSchema.plugin(mongooseAggregatePaginate)
+videoSchema.set("toJSON", {
+    transform : (doc,ret) => {
+        delete ret.owner.password
+    }
+})
 
 export const Video = mongoose.model("Video",videoSchema)
