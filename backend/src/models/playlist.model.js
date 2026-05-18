@@ -19,11 +19,7 @@ owner : {
 } 
 },{timestamps : true})
 
-playlistSchema.set("toJSON", {
-    transform : (doc,ret) => {
-        delete ret.owner.password
-    }
-})
+
 const Playlist = mongoose.model("Playlist",playlistSchema)
 
 export {Playlist}

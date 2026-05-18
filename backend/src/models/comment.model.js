@@ -25,11 +25,6 @@ const commentSchema = new Schema(
 commentSchema.plugin(mongooseAggregatePaginate);
 commentSchema.index({ video: 1, createdAt: -1 });
 
-commentSchema.set("toJSON", {
-    transform : (doc,ret) => {
-        delete ret.owner.password
-    }
-})
 
 const Comment = mongoose.model("Comment",commentSchema) 
  

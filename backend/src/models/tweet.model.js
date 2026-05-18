@@ -21,11 +21,6 @@ tweetSchema.virtual("replies", {
     foreignField: "tweet"
 });
 
-tweetSchema.set("toJSON", {
-    transform : (doc,ret) => {
-        delete ret.owner.password
-    }
-})
 const Tweet = mongoose.model("Tweet",tweetSchema)
 
 export {Tweet}
