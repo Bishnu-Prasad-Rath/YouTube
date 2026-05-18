@@ -135,7 +135,8 @@ const addTweetComment = asyncHandler(async (req, res) => {
 
   const populatedComment = await Comment.findById(comment._id).populate(
     "owner",
-    "username avatar fullName"
+    "username avatar fullName",
+    "-password"
   );
   getIO().emit("new:reply", populatedComment);
 
@@ -156,7 +157,11 @@ const updateComment = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Content is required");
   }
 
-  const comment = await Comment.findById(commentId);
+  const comment = await Comment.findById(commentId)
+  .populate({
+    path: "owner",
+    select: "-password"
+  })
 
   if (!comment) {
     throw new ApiError(404, "Comment not found.");
@@ -184,7 +189,10 @@ const deleteComment = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid comment ID");
   }
 
-  const comment = await Comment.findById(commentId);
+  const comment = await Comment.findById(commentId).populate({
+   path: "owner",
+   select: "-password"
+  })
 
   if (!comment) {
     throw new ApiError(404, "Comment not found");

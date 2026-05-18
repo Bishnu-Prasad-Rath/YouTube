@@ -123,7 +123,9 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
   }
 
   // 1. Fetch the comment ONCE to prevent redeclaration errors
-  const comment = await Comment.findById(commentId);
+  const comment = await Comment.findById(commentId).populate(
+    "-password"
+  );
   if (!comment) throw new ApiError(404, "Comment not found");
 
   const channelId = comment.owner;
