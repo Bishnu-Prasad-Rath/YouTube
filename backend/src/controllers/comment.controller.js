@@ -74,7 +74,7 @@ const comments = await Comment.aggregate([
   { $sort: { createdAt: -1 } },
   { $skip: skip },
   { $limit: limit },
-  { $project: { likes: 0 } } // hide raw likes array
+  { $project: { likes: 0, "owner.password": 0, "owner.refreshToken": 0 } } // hide raw likes array and sensitive user data
 ]);
 
 // Then cache and return as normal
