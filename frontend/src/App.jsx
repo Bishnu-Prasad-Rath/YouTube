@@ -10,25 +10,58 @@ import { Navbar } from "./components/Navbar";
 import { Sidebar } from "./components/Sidebar";
 
 // 👇 LAZY LOADED PAGES (with a trick to handle your named exports!) 👇
-const Home = lazy(() => import("./pages/Home").then(m => ({ default: m.Home })));
-const VideoDetail = lazy(() => import("./pages/VideoDetail").then(m => ({ default: m.VideoDetail })));
-const Auth = lazy(() => import("./pages/Auth").then(m => ({ default: m.Auth })));
-const Upload = lazy(() => import("./pages/Upload").then(m => ({ default: m.Upload })));
-const Dashboard = lazy(() => import("./pages/Dashboard").then(m => ({ default: m.Dashboard })));
-const Broadcaster = lazy(() => import("./pages/Broadcaster").then(m => ({ default: m.Broadcaster })));
-const LiveStream = lazy(() => import("./pages/LiveStream").then(m => ({ default: m.LiveStream })));
-const LiveHub = lazy(() => import("./pages/LiveHub").then(m => ({ default: m.LiveHub })));
-const Profile = lazy(() => import("./pages/Profile").then(m => ({ default: m.Profile })));
-const Trending = lazy(() => import("./pages/Trending").then(m => ({ default: m.Trending })));
-const Subscriptions = lazy(() => import("./pages/Subscriptions").then(m => ({ default: m.Subscriptions })));
-const Tweets = lazy(() => import("./pages/Tweets").then(m => ({ default: m.Tweets })));
-const PlaylistStudio = lazy(() => import("./pages/PlaylistStudio").then(m => ({ default: m.PlaylistStudio })));
-const PlaylistPlayerPage = lazy(() => import("./pages/PlaylistPlayerPage").then(m => ({ default: m.PlaylistPlayerPage })));
-const Search = lazy(() => import("./pages/Search").then(m => ({ default: m.Search })));
+const Home = lazy(() =>
+  import("./pages/Home").then((m) => ({ default: m.Home })),
+);
+const VideoDetail = lazy(() =>
+  import("./pages/VideoDetail").then((m) => ({ default: m.VideoDetail })),
+);
+const Auth = lazy(() =>
+  import("./pages/Auth").then((m) => ({ default: m.Auth })),
+);
+const Upload = lazy(() =>
+  import("./pages/Upload").then((m) => ({ default: m.Upload })),
+);
+const Dashboard = lazy(() =>
+  import("./pages/Dashboard").then((m) => ({ default: m.Dashboard })),
+);
+const Broadcaster = lazy(() =>
+  import("./pages/Broadcaster").then((m) => ({ default: m.Broadcaster })),
+);
+const LiveStream = lazy(() =>
+  import("./pages/LiveStream").then((m) => ({ default: m.LiveStream })),
+);
+const LiveHub = lazy(() =>
+  import("./pages/LiveHub").then((m) => ({ default: m.LiveHub })),
+);
+const Profile = lazy(() =>
+  import("./pages/Profile").then((m) => ({ default: m.Profile })),
+);
+const Trending = lazy(() =>
+  import("./pages/Trending").then((m) => ({ default: m.Trending })),
+);
+const Subscriptions = lazy(() =>
+  import("./pages/Subscriptions").then((m) => ({ default: m.Subscriptions })),
+);
+const Tweets = lazy(() =>
+  import("./pages/Tweets").then((m) => ({ default: m.Tweets })),
+);
+const PlaylistStudio = lazy(() =>
+  import("./pages/PlaylistStudio").then((m) => ({ default: m.PlaylistStudio })),
+);
+const PlaylistPlayerPage = lazy(() =>
+  import("./pages/PlaylistPlayerPage").then((m) => ({
+    default: m.PlaylistPlayerPage,
+  })),
+);
+const Search = lazy(() =>
+  import("./pages/Search").then((m) => ({ default: m.Search })),
+);
+import { GlobalLoader } from "./components/Skeletons";
 
 const ProtectedRoute = ({ children }) => {
   const { currentUser, loading } = useAuth();
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <GlobalLoader />;
   if (!currentUser) return <Navigate to="/auth" />;
   return children;
 };
@@ -49,15 +82,7 @@ const AppRoutes = () => {
           className={`flex-1 w-full overflow-x-hidden transition-all duration-300 ${sidebarExpanded ? "ml-64" : "ml-0"}`}
         >
           {/* 👇 NEO-BRUTALIST SUSPENSE BOUNDARY 👇 */}
-          <Suspense 
-            fallback={
-              <div className="flex items-center justify-center h-[calc(100vh-100px)] w-full">
-                 <div className="text-4xl font-black uppercase tracking-widest bg-neoYellow border-8 border-neoBlack p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] animate-pulse -rotate-2">
-                    LOADING SECTOR...
-                 </div>
-              </div>
-            }
-          >
+          <Suspense fallback={<GlobalLoader />}>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/video/:videoId" element={<VideoDetail />} />

@@ -16,16 +16,22 @@ export default defineConfig({
           if (id.includes('node_modules')) {
             // Core React & Router
             if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
-              return 'vendor';
+              return 'react-core';
             }
             // Heavy Live Streaming Engine
             if (id.includes('@livekit') || id.includes('livekit-client')) {
               return 'livekit';
             }
-            // Sockets, Charts, and Icons
-            if (id.includes('recharts') || id.includes('lucide-react') || id.includes('socket.io-client')) {
-              return 'ui';
+            // Charts
+            if (id.includes('recharts')) {
+              return 'recharts';
             }
+            // Animations
+            if (id.includes('framer-motion')) {
+              return 'framer-motion';
+            }
+            // Other utilities and libraries
+            return 'vendor-utils';
           }
         }
       }

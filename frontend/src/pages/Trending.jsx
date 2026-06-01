@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api } from "../api/axios";
 import { Flame } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { TrendingRowSkeleton } from "../components/Skeletons";
 
 export const Trending = () => {
   const [items, setItems] = useState([]);
@@ -24,12 +25,27 @@ export const Trending = () => {
     fetchTrending();
   }, []);
 
-  if (loading)
+  if (loading) {
     return (
-      <div className="mt-12 text-4xl font-black text-center uppercase animate-pulse">
-        Loading Leaderboard...
+      <div className="max-w-5xl px-6 pb-12 mx-auto">
+        <div className="flex items-center gap-4 mt-4 mb-8">
+          <h1 className="text-4xl font-black uppercase border-4 border-neoBlack px-6 py-3 tracking-tight bg-neoYellow shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rotate-[-1deg]">
+            Trending Leaderboard
+          </h1>
+          <Flame
+            size={48}
+            className="text-neoRed animate-pulse stroke-black stroke-[2]"
+          />
+        </div>
+
+        <div className="flex flex-col gap-6">
+          {[...Array(4)].map((_, idx) => (
+            <TrendingRowSkeleton key={idx} />
+          ))}
+        </div>
       </div>
     );
+  }
 
   return (
     <div className="max-w-5xl px-6 pb-12 mx-auto">
