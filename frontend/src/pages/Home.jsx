@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/axios";
 import { VideoCardSkeleton } from "../components/Skeletons";
+import { VideoCard } from "../components/VideoCard";
 
 export const Home = () => {
   const [videos, setVideos] = useState([]);
