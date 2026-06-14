@@ -1,0 +1,44 @@
+config:
+  target: "https://youtube-k7zk.onrender.com"
+
+  phases:
+    - duration: 30
+      arrivalRate: 1
+      name: "Warm Up"
+
+    - duration: 60
+      arrivalRate: 2
+      name: "Normal Users"
+
+  payload:
+    path: "./users.csv"
+    fields:
+      - email
+      - password
+
+scenarios:
+  - name: "Watch Video Journey"
+
+    flow:
+
+      # Login
+      - post:
+          url: "/api/v1/users/login"
+          json:
+            email: "{{ email }}"
+            password: "{{ password }}"
+
+      # Get Homepage Videos
+      - get:
+          url: "/api/v1/videos"
+
+      # Watch Video
+      - get:
+          url: "/api/v1/videos/69fb35bdbee7327b3a4acafd"
+
+      # Simulate watching
+      - think: 20
+
+      # Logout
+      - post:
+          url: "/api/v1/users/logout"

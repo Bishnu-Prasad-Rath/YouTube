@@ -1,0 +1,57 @@
+config:
+  target: "https://youtube-k7zk.onrender.com"
+
+  phases:
+    - duration: 30
+      arrivalRate: 2
+      name: "Warm Up"
+
+    - duration: 60
+      arrivalRate: 5
+      name: "Normal Traffic"
+
+    - duration: 60
+      arrivalRate: 10
+      name: "Peak Traffic"
+
+  payload:
+    path: "./users.csv"
+    fields:
+      - email
+      - password
+
+  defaults:
+    headers:
+      x-load-test-key: "LOAD_TEST_SECRET"
+
+scenarios:
+  - name: "Live Stream Viewer Journey"
+
+    flow:
+
+      # Step 1: Login
+      - post:
+          url: "/api/v1/users/login"
+
+          json:
+            email: "{{ email }}"
+            password: "{{ password }}"
+
+          capture:
+            - json: "$.success"
+              as: "loginSuccess"
+
+      # Step 2: Get Live Stream Information
+      - get:
+          url: "/api/v1/live/YOUR_LIVE_ID"
+
+      # Step 3: Request LiveKit Token
+      - get:
+          url: "/api/v1/live/token/YOUR_LIVE_ID"
+
+      # Step 4: Simulate Watching the Stream
+      - think: 60
+
+      # Step 5: Logout
+      - post:
+          url: "/api/v1/users/logout"
