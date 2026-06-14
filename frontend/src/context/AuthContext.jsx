@@ -50,11 +50,27 @@ const fetchCurrentUser = async () => {
     fetchCurrentUser();
   }, []);
 
-  const login = async (email, username, password) => {
-    const { data } = await api.post("/users/login", { email, username, password });
-    setCurrentUser(data.data.user);
-    return data;
-  };
+const login = async (email, username, password) => {
+  setLoading(true);
+
+  try {
+
+    await api.post("/users/login", {
+      email,
+      username,
+      password,
+    });
+
+    // Wait for cookies to settle
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    await fetchCurrentUser();
+
+  } finally {
+
+    setLoading(false);
+  }
+};
 
   const register = async (formData) => {
     // form data to handle avatar and coverImage
