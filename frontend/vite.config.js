@@ -1,40 +1,51 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import { visualizer } from "rollup-plugin-visualizer";
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     tailwindcss(),
-    react()
+    react(),
+    visualizer({
+      open: true,
+      gzipSize: true,
+      brotliSize: true,
+      filename: "stats.html",
+    }),
   ],
   build: {
     rollupOptions: {
       output: {
-        // Changed from an Object to a Function 
+        // Changed from an Object to a Function
         manualChunks(id) {
-          if (id.includes('node_modules')) {
+          if (id.includes("node_modules")) {
             // Core React & Router
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
-              return 'react-core';
+            if (
+              id.includes("react") ||
+              id.includes("react-dom") ||
+              id.includes("react-router-dom")
+            ) {
+              return "react-core";
             }
             // Heavy Live Streaming Engine
-            if (id.includes('@livekit') || id.includes('livekit-client')) {
-              return 'livekit';
+            if (id.includes("@livekit") || id.includes("livekit-client")) {
+              return "livekit";
             }
             // Charts
-            if (id.includes('recharts')) {
-              return 'recharts';
+            if (id.includes("recharts")) {
+              return "recharts";
             }
             // Animations
-            if (id.includes('framer-motion')) {
-              return 'framer-motion';
+            if (id.includes("framer-motion")) {
+              return "framer-motion";
             }
             // Other utilities and libraries
-            return 'vendor-utils';
+            return "vendor-utils";
           }
-        }
-      }
-    }
-  }
-})
+        },
+      },
+    },
+  },
+});

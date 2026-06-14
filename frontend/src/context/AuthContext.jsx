@@ -25,16 +25,26 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
-  const fetchCurrentUser = async () => {
-    try {
-      const { data } = await api.get("/users/current-user");
-      setCurrentUser(data.data);
-    } catch (error) {
-      setCurrentUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchCurrentUser = async () => {
+  try {
+    const { data } = await api.get(
+      "/users/current-user",
+      {
+        timeout: 5000,
+      }
+    );
+
+    setCurrentUser(data.data);
+
+  } catch (error) {
+
+    setCurrentUser(null);
+
+  } finally {
+
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchCurrentUser();
@@ -72,7 +82,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };
