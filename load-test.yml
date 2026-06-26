@@ -37,7 +37,7 @@ scenarios:
           url: "/api/v1/videos/69fb35bdbee7327b3a4acafd"
 
       # Simulate watching
-      - think: 20
+      - think: 3
 
       # Logout
       - post:

@@ -22,14 +22,13 @@ config:
 
   defaults:
     headers:
-      x-load-test-key: "LOAD_TEST_SECRET"
+      x-load-test-key: "waifuTesting123"
 
 scenarios:
   - name: "Live Stream Viewer Journey"
 
     flow:
 
-      # Step 1: Login
       - post:
           url: "/api/v1/users/login"
 
@@ -37,21 +36,13 @@ scenarios:
             email: "{{ email }}"
             password: "{{ password }}"
 
-          capture:
-            - json: "$.success"
-              as: "loginSuccess"
-
-      # Step 2: Get Live Stream Information
       - get:
-          url: "/api/v1/live/YOUR_LIVE_ID"
+          url: "/api/v1/live/69fb35bdbee7327b3a4acafd"
 
-      # Step 3: Request LiveKit Token
       - get:
-          url: "/api/v1/live/token/YOUR_LIVE_ID"
+          url: "/api/v1/live/get-token/69fb35bdbee7327b3a4acafd"
 
-      # Step 4: Simulate Watching the Stream
       - think: 60
 
-      # Step 5: Logout
       - post:
           url: "/api/v1/users/logout"

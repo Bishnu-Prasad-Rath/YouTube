@@ -7,11 +7,15 @@ import { User } from "../models/user.model.js";
 
 export const verifyJWT = asyncHandler(async (req, _, next) => {
   try {
+    console.log("Cookies:", req.cookies);
+    console.log("Authorization:", req.header("Authorization"));
+
     const token =
       req.cookies?.accessToken ||
       req.header("Authorization")?.replace("Bearer ", "");
 
     if (!token) {
+      console.log("No accesss token recieved.");
       throw new ApiError(401, "Unauthorized request");
     }
 
@@ -23,7 +27,7 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
 
     if (!user) {
       //TODO : Disscuss about frontend
-
+      console.log("User not found");
       throw new ApiError(401, "Invalid access token");
     }
 
