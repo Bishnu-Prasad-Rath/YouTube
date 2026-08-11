@@ -8,17 +8,17 @@ const redisClient = new IORedis(
 );
 
 const testRedisLatency = async () => {
-  const start = performance.now();
+  for (let i = 1; i <= 5; i++) {
+    const start = performance.now();
 
-  await redisClient.ping();
+    await redisClient.ping();
 
-  const latency = performance.now() - start;
+    const latency = performance.now() - start;
 
-  console.log(
-    `[PERF][Redis PING] ${latency.toFixed(2)}ms`
-  );
-
-  return latency;
+    console.log(
+      `[PERF][Redis PING ${i}] ${latency.toFixed(2)}ms`
+    );
+  }
 };
 
 redisClient.on("connect", () => {
