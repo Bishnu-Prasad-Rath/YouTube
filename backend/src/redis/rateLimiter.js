@@ -6,7 +6,7 @@ local now = tonumber(ARGV[1])
 local windowStart = tonumber(ARGV[2])
 local maxRequests = tonumber(ARGV[3])
 local windowSize = tonumber(ARGV[4])
-local requestId = tonumber(ARGV[5])
+local requestId = ARGV[5]
 
 redis.call("ZREMRANGEBYSCORE", key, 0, windowStart)
 
