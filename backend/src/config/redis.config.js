@@ -1,16 +1,34 @@
 import IORedis from "ioredis";
 
-// Add the options object with maxRetriesPerRequest: null
-const redisClient = new IORedis(process.env.REDIS_URL || "redis://127.0.0.1:6379", {
-  maxRetriesPerRequest: null,
-});
+const redisClient = new IORedis(
+  process.env.REDIS_URL || "redis://127.0.0.1:6379",
+  {
+    maxRetriesPerRequest: null,
+  }
+);
+
+const testRedisLatency = async () => {
+  const start = performance.now();
+
+  await redisClient.ping();
+
+  const latency = performance.now() - start;
+
+  console.log(
+    `[PERF][Redis PING] ${latency.toFixed(2)}ms`
+  );
+
+  return latency;
+};
 
 redisClient.on("connect", () => {
   console.log("Redis is connecting...");
 });
 
-redisClient.on("ready", () => {
+redisClient.on("ready", async () => {
   console.log("✅ Redis is Ready.");
+
+  await testRedisLatency();
 });
 
 redisClient.on("error", (err) => {
@@ -18,12 +36,11 @@ redisClient.on("error", (err) => {
 });
 
 const connectRedis = async () => {
-  try {
-    // ioredis auto-connects, no need for .connect()
-    console.log("✅ Redis initialization complete");
-  } catch (error) {
-    console.log("❌ Redis initialization failed:", error);
-  }
+  console.log("✅ Redis initialization complete");
 };
 
-export { redisClient, connectRedis };
+export {
+  redisClient,
+  connectRedis,
+  testRedisLatency,
+};

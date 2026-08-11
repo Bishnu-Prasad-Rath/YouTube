@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import connectDB from "./db/index.js";
 import { app } from "./app.js";
-import { connectRedis } from "./config/redis.config.js";
+import { connectRedis, testRedisLatency } from "./config/redis.config.js";
 import http from "http";
 import { Server } from "socket.io";
 import { initSocket } from "./socket/socket.js";
@@ -28,6 +28,8 @@ const startServer = async () => {
   try {
     await connectDB();
     await connectRedis();
+
+    testRedisLatency()
 
     app.on("ERROR", (error) => {
       console.log(`There is something server error ${error}`);
