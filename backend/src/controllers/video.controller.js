@@ -179,7 +179,7 @@ const getVideoById = asyncHandler(async (req, res) => {
   const ownerId = videoDoc.owner;
 
   if (req.query.inc === "true") {
-    start = performance.now();
+  let  start = performance.now();
 
     await Video.findByIdAndUpdate(videoId, {
       $inc: { views: 1 },
