@@ -1,15 +1,16 @@
 config:
+  # Required version tag for modern Artillery
+  version: "2"
+  
   target: "https://youtube-k7zk.onrender.com"
 
   phases:
     - duration: 30
       arrivalRate: 2
       name: "Warm Up"
-
     - duration: 60
       arrivalRate: 5
       name: "Normal Traffic"
-
     - duration: 60
       arrivalRate: 10
       name: "Peak Traffic"
@@ -17,8 +18,10 @@ config:
   payload:
     path: "./users.csv"
     fields:
-      - email
-      - password
+      - "email"
+      - "password"
+    # Ensures different virtual users get different credentials sequentially
+    order: sequence 
 
   defaults:
     headers:
@@ -26,23 +29,37 @@ config:
 
 scenarios:
   - name: "Live Stream Viewer Journey"
-
     flow:
-
+      # 1. Login and manually extract the authorization cookie
       - post:
           url: "/api/v1/users/login"
-
           json:
             email: "{{ email }}"
             password: "{{ password }}"
+          capture:
+            - header: "set-cookie"
+              as: "authCookie"
 
+      # Optional debug step: Un-comment the line below to print the cookie to your console 
+      # - log: "Captured Cookie: {{ authCookie }}"
+
+      # 2. Fetch the live stream details using the captured cookie
       - get:
           url: "/api/v1/live/69fb35bdbee7327b3a4acafd"
+          headers:
+            Cookie: "{{ authCookie }}"
 
+      # 3. Get the streaming token using the captured cookie
       - get:
           url: "/api/v1/live/get-token/69fb35bdbee7327b3a4acafd"
+          headers:
+            Cookie: "{{ authCookie }}"
 
+      # 4. Simulate user viewing the stream
       - think: 60
 
+      # 5. Logout safely using the same session cookie
       - post:
           url: "/api/v1/users/logout"
+          headers:
+            Cookie: "{{ authCookie }}"
