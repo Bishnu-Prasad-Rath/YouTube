@@ -180,7 +180,7 @@ const getVideoById = asyncHandler(async (req, res) => {
     });
 
     await incrementViews(ownerId);
-    // await updateTrendingScore(videoId, 2);
+    await updateTrendingScore(videoId, 2);
   }
 
   const cachedVideo = await getVideoCache(videoId);
