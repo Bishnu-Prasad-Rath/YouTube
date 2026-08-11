@@ -3,7 +3,7 @@ import {redisClient} from '../config/redis.config.js';
 const rateLimitScript = `
 local key = KEYS[1]
 local now = tonumber(ARGV[1])
-local windowstart = tonumber(ARGV[2])
+local windowStart = tonumber(ARGV[2])
 local maxRequests = tonumber(ARGV[3])
 local windowSize = tonumber(ARGV[4])
 local requestId = tonumber(ARGV[5])
