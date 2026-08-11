@@ -160,6 +160,10 @@ const publishAVideo = asyncHandler(async (req, res) => {
 });
 
 const getVideoById = asyncHandler(async (req, res) => {
+  const requestStart = performance.now();
+
+  const timings = {};
+
   const { videoId } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(videoId)) {
@@ -175,15 +179,32 @@ const getVideoById = asyncHandler(async (req, res) => {
   const ownerId = videoDoc.owner;
 
   if (req.query.inc === "true") {
+    start = performance.now();
+
     await Video.findByIdAndUpdate(videoId, {
       $inc: { views: 1 },
     });
 
+    timings.viewUpdate = performance.now() - start;
+
+    start = performance.now();
+
     await incrementViews(ownerId);
+
+    timings.dashboard = performance.now() - start;
+
+    start = performance.now();
+
     await updateTrendingScore(videoId, 2);
+
+    timings.dashboard = performance.now() - start;
   }
 
+  let start = performance.now();
+
   const cachedVideo = await getVideoCache(videoId);
+
+  timings.videoCache = performance.now() - start;
 
   if (cachedVideo) {
     if (req.query.inc === "true") {
@@ -191,6 +212,10 @@ const getVideoById = asyncHandler(async (req, res) => {
       // Also update the cache so future requests without ?inc=true see the new view
       await setVideoCache(videoId, cachedVideo);
     }
+
+    timings.total = performance.now() - requestStart;
+
+    console.log("[PERF][getVideoById]", timings);
 
     return res
       .status(200)
@@ -283,7 +308,7 @@ const getTrending = asyncHandler(async (req, res) => {
     ),
     Live.find({
       _id: { $in: itemIds },
-      isActive: true, 
+      isActive: true,
     }).populate("streamer", "username fullName avatar"),
   ]);
 
