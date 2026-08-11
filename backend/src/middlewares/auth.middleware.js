@@ -6,7 +6,7 @@ import { User } from "../models/user.model.js";
 // Start timer for JWT verification
 
 export const verifyJWT = asyncHandler(async (req, _, next) => {
-  const authStart = performance.now();
+  let authStart = performance.now();
   try {
     console.log({
       hasAccessToken: Boolean(req.cookies?.accessToken),
@@ -23,14 +23,11 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
       throw new ApiError(401, "Unauthorized request");
     }
 
-    authStart = performance.now();
+    const authTime = performance.now() - authStart;
 
     const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
-    console.log(
-      "[PERF][verifyJWT]",
-      `${(performance.now() - authStart).toFixed(2)}ms`
-    );
+    console.log(`[PERF][verifyJWT] ${authTime.toFixed(2)}ms`);
 
     const user = await User.findById(decodedToken?._id).select(
       "-password -refreshToken"
