@@ -22,7 +22,7 @@ redis.call("EXPIRE", key, windowSize);
 return {1, currentRequests + 1}
 `
 
-export const ratelimiter = async({
+export const rateLimiter = async({
   key,
   maxRequests,
   windowSize,
