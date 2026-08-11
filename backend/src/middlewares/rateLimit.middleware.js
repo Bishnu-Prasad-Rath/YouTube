@@ -3,13 +3,14 @@ import { rateLimiter } from "../redis/rateLimiter.js";
 const rateLimitMiddleware = (options) => {
   return async (req, res, next) => {
 
-    // Skip rate limiting for authorized load tests
-    if (
-      req.headers["x-load-test-key"] ===
-      process.env.LOAD_TEST_SECRET
-    ) {
-      return next();
-    }
+const loadTestSecret = process.env.LOAD_TEST_SECRET;
+
+if (
+  loadTestSecret &&
+  req.headers["x-load-test-key"] === loadTestSecret
+) {
+  return next();
+}
 
     const identifier = req.user?._id || req.ip;
     const key = `rate:${identifier}:${req.path}`;
