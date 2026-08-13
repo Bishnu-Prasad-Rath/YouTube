@@ -11,13 +11,11 @@ app.use((req, res, next) => {
   const start = performance.now();
 
   res.on("finish", () => {
-    const total = performance.now() - start;
-
     console.log("[PERF][REQUEST]", {
       method: req.method,
       path: req.originalUrl,
       status: res.statusCode,
-      total: Number(total.toFixed(2)),
+      total: Number((performance.now() - start).toFixed(2)),
     });
   });
 
