@@ -7,6 +7,23 @@ import { errorHandler } from "./middlewares/error.middleware.js";
 
 const app = express();
 
+app.use((req, res, next) => {
+  const start = performance.now();
+
+  res.on("finish", () => {
+    const total = performance.now() - start;
+
+    console.log("[PERF][REQUEST]", {
+      method: req.method,
+      path: req.originalUrl,
+      status: res.statusCode,
+      total: Number(total.toFixed(2)),
+    });
+  });
+
+  next();
+});
+
 app.use(helmet());
 app.disable("x-powered-by");
 
