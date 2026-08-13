@@ -15,10 +15,18 @@ if (
     const identifier = req.user?._id || req.ip;
     const key = `rate:${identifier}:${req.path}`;
 
-    const result = await rateLimiter({
-      key,
-      ...options,
-    });
+const rateLimitStart = performance.now();
+
+const result = await rateLimiter({
+  key,
+  ...options,
+});
+
+const rateLimitTime = performance.now() - rateLimitStart;
+
+console.log(
+  `[PERF][rateLimit] ${rateLimitTime.toFixed(2)}ms`
+);
 
     if (!result.allowed) {
       return res.status(429).json({
