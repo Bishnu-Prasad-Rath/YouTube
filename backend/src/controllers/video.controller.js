@@ -170,35 +170,7 @@ const getVideoById = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid video ID");
   }
 
-  const videoDoc = await Video.findById(videoId);
-
-  if (!videoDoc) {
-    throw new ApiError(404, "Video not found");
-  }
-
-  const ownerId = videoDoc.owner;
-
-  if (req.query.inc === "true") {
-  let  start = performance.now();
-
-    await Video.findByIdAndUpdate(videoId, {
-      $inc: { views: 1 },
-    });
-
-    timings.viewUpdate = performance.now() - start;
-
-    start = performance.now();
-
-    await incrementViews(ownerId);
-
-    timings.dashboard = performance.now() - start;
-
-    start = performance.now();
-
-    await updateTrendingScore(videoId, 2);
-
-    timings.dashboard = performance.now() - start;
-  }
+  // Cache hit
 
   let start = performance.now();
 
@@ -206,21 +178,77 @@ const getVideoById = asyncHandler(async (req, res) => {
 
   timings.videoCache = performance.now() - start;
 
-  if (cachedVideo) {
-    if (req.query.inc === "true") {
-      cachedVideo.views += 1;
-      // Also update the cache so future requests without ?inc=true see the new view
-      await setVideoCache(videoId, cachedVideo);
+  // View increment
+
+  if (req.query.inc === "true") {
+    start = performance.now();
+
+    const updatedVideo = await Video.findByIdAndUpdate(
+      videoId,
+      {
+        $inc: { views: 1 },
+      },
+      {
+        new: true,
+      }
+    );
+
+    timings.viewUpdate = performance.now() - start;
+
+    if (!updatedVideo) {
+      throw new ApiError(404, "Video not found");
     }
 
+  // Dashboard update
+
+    start = performance.now();
+
+    await incrementViews(updatedVideo.owner);
+
+    timings.dashboard = performance.now() - start;
+
+    // Trending score update
+
+    start = performance.now();
+
+    await updateTrendingScore(videoId);
+
+    timings.trending = performance.now() - start;
+
+   // Update cached video it it exists
+
+    if (cachedVideo) {
+      cachedVideo.views = updatedVideo.views;
+
+      start = performance.now();
+
+      await setVideoCache(videoId, cachedVideo);
+
+      timings.cacheUpdate = performance.now() - start;
+    }
+  }
+
+   // Cache hit response
+
+  if (cachedVideo) {
     timings.total = performance.now() - requestStart;
 
     console.log("[PERF][getVideoById]", timings);
 
     return res
       .status(200)
-      .json(new ApiResponse(200, cachedVideo, "Video fetched from cache."));
+      .json(
+        new ApiResponse(
+          200,
+          cachedVideo,
+          "Video fetched from cache."
+        )
+      );
   }
+
+    // Cache miss, fetch from MongoDB
+
+  start = performance.now();
 
   const video = await Video.aggregate([
     {
@@ -256,17 +284,37 @@ const getVideoById = asyncHandler(async (req, res) => {
     },
   ]);
 
+  timings.mongoVideo = performance.now() - start;
+
   if (!video.length) {
     throw new ApiError(404, "Video not found");
   }
 
   const videoData = video[0];
 
+   // Cache results 
+
+  start = performance.now();
+
   await setVideoCache(videoId, videoData);
+
+  timings.cacheSet = performance.now() - start;
+
+   // Final response
+
+  timings.total = performance.now() - requestStart;
+
+  console.log("[PERF][getVideoById]", timings);
 
   return res
     .status(200)
-    .json(new ApiResponse(200, video[0], "Video fetched successfully"));
+    .json(
+      new ApiResponse(
+        200,
+        videoData,
+        "Video fetched successfully"
+      )
+    );
 });
 
 const getTrending = asyncHandler(async (req, res) => {
