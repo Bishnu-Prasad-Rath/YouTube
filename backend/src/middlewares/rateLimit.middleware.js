@@ -12,7 +12,10 @@ if (
   return next();
 }
 
-    const identifier = req.user?._id || req.ip;
+    const identifier =
+  req.auth?._id ||
+  req.user?._id ||
+  req.ip;
     const key = `rate:${identifier}:${req.path}`;
 
 const rateLimitStart = performance.now();
