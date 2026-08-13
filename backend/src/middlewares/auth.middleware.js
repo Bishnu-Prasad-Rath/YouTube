@@ -28,14 +28,13 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
 
     const jwtTime = performance.now() - jwtStart;
 
-    // Database user lookup
-    const dbStart = performance.now();
+const dbStart = performance.now();
 
-    const user = await User.findById(decodedToken?._id).select(
-      "-password -refreshToken"
-    );
+const user = await User.findById(decodedToken?._id)
+  .select("-password -refreshToken")
+  .lean();
 
-    const dbTime = performance.now() - dbStart;
+const dbTime = performance.now() - dbStart;
 
     if (!user) {
       throw new ApiError(401, "Invalid access token");
