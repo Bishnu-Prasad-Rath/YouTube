@@ -2,34 +2,30 @@ import { rateLimiter } from "../redis/rateLimiter.js";
 
 const rateLimitMiddleware = (options) => {
   return async (req, res, next) => {
+    const loadTestSecret = process.env.LOAD_TEST_SECRET;
+    const loadTestBypass = process.env.LOAD_TEST_BYPASS_RATE_LIMIT === "true";
 
-const loadTestSecret = process.env.LOAD_TEST_SECRET;
+    if (
+      loadTestBypass &&
+      loadTestSecret &&
+      req.headers["x-load-test-key"] === loadTestSecret
+    ) {
+      return next();
+    }
 
-if (
-  loadTestSecret &&
-  req.headers["x-load-test-key"] === loadTestSecret
-) {
-  return next();
-}
-
-    const identifier =
-  req.auth?._id ||
-  req.user?._id ||
-  req.ip;
+    const identifier = req.auth?._id || req.user?._id || req.ip;
     const key = `rate:${identifier}:${req.path}`;
 
-const rateLimitStart = performance.now();
+    const rateLimitStart = performance.now();
 
-const result = await rateLimiter({
-  key,
-  ...options,
-});
+    const result = await rateLimiter({
+      key,
+      ...options,
+    });
 
-const rateLimitTime = performance.now() - rateLimitStart;
+    const rateLimitTime = performance.now() - rateLimitStart;
 
-console.log(
-  `[PERF][rateLimit] ${rateLimitTime.toFixed(2)}ms`
-);
+    console.log(`[PERF][rateLimit] ${rateLimitTime.toFixed(2)}ms`);
 
     if (!result.allowed) {
       return res.status(429).json({
