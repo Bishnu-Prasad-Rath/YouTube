@@ -22,10 +22,7 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
 
     const jwtStart = performance.now();
 
-    const decodedToken = jwt.verify(
-      token,
-      process.env.ACCESS_TOKEN_SECRET
-    );
+    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
     const jwtTime = performance.now() - jwtStart;
 
@@ -33,12 +30,15 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
       throw new ApiError(401, "Invalid access token");
     }
 
-    req.auth = {
+    const authenticatedUser = {
       _id: decodedToken._id,
       email: decodedToken.email,
       username: decodedToken.username,
       fullName: decodedToken.fullName,
     };
+
+    req.auth = authenticatedUser;
+    req.user = authenticatedUser;
 
     const total = performance.now() - authStart;
 
@@ -51,9 +51,6 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
 
     next();
   } catch (error) {
-    throw new ApiError(
-      401,
-      error?.message || "Invalid access token"
-    );
+    throw new ApiError(401, error?.message || "Invalid access token");
   }
 });
