@@ -16,8 +16,7 @@ const getVideosCache = (params) =>
 const setVideosCache = (params, data) =>
   setCache(CACHE_KEYS.VIDEOS(params), data);
 
-const deleteVideosCache = (params) => {
+const deleteVideosCache = (params) => 
     deleteCache(CACHE_KEYS.VIDEOS(params));
-}
 
 export{getVideoCache,setVideoCache,deleteVideoCache,getVideosCache,setVideosCache,deleteVideosCache}

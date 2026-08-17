@@ -27,6 +27,7 @@ import {
   updateTrendingScore,
   getTrendingScore,
 } from "../redis/cache/trending.cache.js";
+import { viewQueue } from "../queues/view.queue.js";
 
 const getAllVideos = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
@@ -180,55 +181,19 @@ const getVideoById = asyncHandler(async (req, res) => {
 
   // View increment
 
-  if (req.query.inc === "true") {
-    start = performance.now();
-
-    const updatedVideo = await Video.findByIdAndUpdate(
+if (req.query.inc === "true") {
+  await viewQueue.add(
+    "increment",
+    {
       videoId,
-      {
-        $inc: { views: 1 },
-      },
-      {
-        new: true,
-      }
-    );
-
-    timings.viewUpdate = performance.now() - start;
-
-    if (!updatedVideo) {
-      throw new ApiError(404, "Video not found");
+    },
+    {
+      jobId: `view:${videoId}:${Date.now()}`,
     }
+  );
+}
 
-  // Dashboard update
-
-    start = performance.now();
-
-    await incrementViews(updatedVideo.owner);
-
-    timings.dashboard = performance.now() - start;
-
-    // Trending score update
-
-    start = performance.now();
-
-    await updateTrendingScore(videoId);
-
-    timings.trending = performance.now() - start;
-
-   // Update cached video it it exists
-
-    if (cachedVideo) {
-      cachedVideo.views = updatedVideo.views;
-
-      start = performance.now();
-
-      await setVideoCache(videoId, cachedVideo);
-
-      timings.cacheUpdate = performance.now() - start;
-    }
-  }
-
-   // Cache hit response
+  // Cache hit response
 
   if (cachedVideo) {
     timings.total = performance.now() - requestStart;
@@ -237,16 +202,10 @@ const getVideoById = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .json(
-        new ApiResponse(
-          200,
-          cachedVideo,
-          "Video fetched from cache."
-        )
-      );
+      .json(new ApiResponse(200, cachedVideo, "Video fetched from cache."));
   }
 
-    // Cache miss, fetch from MongoDB
+  // Cache miss, fetch from MongoDB
 
   start = performance.now();
 
@@ -292,7 +251,7 @@ const getVideoById = asyncHandler(async (req, res) => {
 
   const videoData = video[0];
 
-   // Cache results 
+  // Cache results
 
   start = performance.now();
 
@@ -300,7 +259,7 @@ const getVideoById = asyncHandler(async (req, res) => {
 
   timings.cacheSet = performance.now() - start;
 
-   // Final response
+  // Final response
 
   timings.total = performance.now() - requestStart;
 
@@ -308,13 +267,7 @@ const getVideoById = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        videoData,
-        "Video fetched successfully"
-      )
-    );
+    .json(new ApiResponse(200, videoData, "Video fetched successfully"));
 });
 
 const getTrending = asyncHandler(async (req, res) => {

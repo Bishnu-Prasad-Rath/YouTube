@@ -16,38 +16,51 @@ const updateTrendingScore = async (itemId) => {
     let views = 0;
     let createdAt;
 
-    let item = await Video.findById(itemId).select("createdAt views");
+    let item = await Video.findById(itemId).select("createdAt views").lean();
+
     if (item) {
-        views = item.views || 0;
-        createdAt = item.createdAt;
+      views = item.views || 0;
+      createdAt = item.createdAt;
     } else {
-        item = await Live.findById(itemId).select("createdAt viewers isLive");
-        if (!item) return;
-        views = item.viewers || 0;
-        createdAt = item.createdAt;
-        isLiveStream = item.isLive;
+      item = await Live.findById(itemId)
+        .select("createdAt viewers isLive")
+        .lean();
+
+      if (!item) return;
+
+      views = item.viewers || 0;
+      createdAt = item.createdAt;
+      isLiveStream = item.isLive;
     }
 
-    const likesCount = await Like.countDocuments({ $or: [{ video: itemId }, { live: itemId }] });
+    const likesCount = await Like.countDocuments({
+      $or: [{ video: itemId }, { live: itemId }],
+    });
 
     const now = Date.now();
     const created = new Date(createdAt).getTime();
+
     const hoursOld = Math.max(0, (now - created) / (1000 * 60 * 60));
 
-    // Gravity Decay Formula: Score = ((Views * 1) + (Likes * 2)) / (HoursOld + 2)^1.5
-    let score = ((views * 1) + (likesCount * 2)) / Math.pow(hoursOld + 2, 1.5);
+    let score = (views * 1 + likesCount * 2) / Math.pow(hoursOld + 2, 1.5);
 
     if (isLiveStream) {
-        score = score * 1.5;
+      score *= 1.5;
     }
-
-    console.log(`🔥 ADV SCORE [${isLiveStream ? 'LIVE' : 'VIDEO'}]:`, itemId, score);
 
     await redisClient.zadd(TRENDING_KEY, score, itemId.toString());
 
-  } catch (err) {
-    console.error("Trending error:", err.message);
+    console.log("[TRENDING]", {
+      itemId: itemId.toString(),
+      score,
+      weight,
+      isLiveStream,
+    });
+  } catch (error) {
+    console.error("[TRENDING] Failed:", error);
+
+    throw error;
   }
 };
 
-export { updateTrendingScore , getTrendingScore };
+export { updateTrendingScore, getTrendingScore };

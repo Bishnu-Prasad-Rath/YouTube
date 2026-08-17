@@ -25,10 +25,8 @@ redisClient.on("connect", () => {
   console.log("Redis is connecting...");
 });
 
-redisClient.on("ready", async () => {
+redisClient.on("ready", () => {
   console.log("✅ Redis is Ready.");
-
-  await testRedisLatency();
 });
 
 redisClient.on("error", (err) => {

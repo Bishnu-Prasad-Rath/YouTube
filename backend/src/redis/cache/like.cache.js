@@ -18,8 +18,11 @@ const decrementVideoLikes = async (videoId) => {
 };
 
 const getVideoLikes = async (videoId) => {
-  const value = await redisClient.get(CACHE_KEYS.VIDEO_LIKES(videoId));
-  return value ? Number(value) : 0;
+  const value = await redisClient.get(
+    CACHE_KEYS.VIDEO_LIKES(videoId)
+  );
+
+  return value === null ? null : Number(value);
 };
 
 const setVideoLikes = async (videoId, count) => {
@@ -42,7 +45,7 @@ const decrementCommentLikes = async (commentId) => {
 
 const getCommentLikes = async (commentId) => {
   const value = await redisClient.get(CACHE_KEYS.COMMENT_LIKES(commentId));
-  return value ? Number(value) : 0;
+  return value === null ? null : Number(value);
 };
 
 const setCommentLikes = async (commentId, count) => {
@@ -66,7 +69,7 @@ const decrementTweetLikes = async (tweetId) => {
 
 const getTweetLikes = async (tweetId) => {
   const value = await redisClient.get(CACHE_KEYS.TWEET_LIKES(tweetId));
-  return value ? Number(value) : 0;
+  return value === null ? null : Number(value);
 };
 
 const setTweetLikes = async (tweetId, count) => {
@@ -90,7 +93,7 @@ const decrementLiveLikes = async (liveId) => {
 
 const getLiveLikes = async (liveId) => {
   const value = await redisClient.get(CACHE_KEYS.LIVE_LIKES(liveId));
-  return value ? Number(value) : 0;
+  return value === null ? null : Number(value);
 };
 
 const setLiveLikes = async (liveId, count) => {
