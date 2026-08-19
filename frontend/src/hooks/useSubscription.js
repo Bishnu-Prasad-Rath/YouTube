@@ -31,12 +31,6 @@ export const useSubscription = (
 
   // Sync internal global context state if initial props arrive from backend payload
 
-  useEffect(() => {
-    if (!activeChannelId) return;
-
-    toggleLocalSub(activeChannelId, initialSubscribedStatus);
-  }, [activeChannelId, initialSubscribedStatus]);
-
   // Sync local counter state
   useEffect(() => {
     setSubscribersCount(initialSubscribersCount);
