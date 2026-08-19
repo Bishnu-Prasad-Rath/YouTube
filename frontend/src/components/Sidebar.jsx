@@ -12,7 +12,10 @@ import { useAuth } from "../context/AuthContext";
 import { api } from "../api/axios";
 
 const SidebarSubscriptions = ({ expanded }) => {
-  const { currentUser, subscribedChannels } = useAuth();
+  const {
+  currentUser,
+  subscriptionsVersion,
+} = useAuth();
   const [channels, setChannels] = useState([]);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -27,7 +30,7 @@ const SidebarSubscriptions = ({ expanded }) => {
       }
     };
     fetchSubs();
-  }, [currentUser, subscribedChannels]);
+  }, [currentUser, subscriptionsVersion]);
 
   if (!currentUser || channels.length === 0) return null;
 

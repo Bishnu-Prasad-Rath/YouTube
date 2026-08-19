@@ -9,46 +9,53 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [subscribedChannels, setSubscribedChannels] = useState([]);
+  const [subscriptionsVersion, setSubscriptionsVersion] = useState(0);
 
-  const toggleLocalSub = (channelId, forceState) => {
-    setSubscribedChannels((prev) => {
-      if (forceState === true && !prev.includes(channelId)) {
-        return [...prev, channelId];
-      }
+const toggleLocalSub = (channelId, forceState) => {
+  setSubscribedChannels((prev) => {
+    const exists = prev.includes(channelId);
 
-      if (forceState === false) {
-        return prev.filter((id) => id !== channelId);
-      }
-
-      if (forceState === undefined) {
-        if (prev.includes(channelId)) {
-          return prev.filter((id) => id !== channelId);
-        }
-
-        return [...prev, channelId];
-      }
-
-      return prev;
-    });
-  };
-
-  const fetchSubscribedChannels = async (userId) => {
-    try {
-      const { data } = await api.get(`/subscription/u/${userId}`);
-
-      const channels = data.data || [];
-
-      const channelIds = channels
-        .map((subscription) => subscription.channel?._id)
-        .filter(Boolean);
-
-      setSubscribedChannels(channelIds);
-    } catch (error) {
-      console.error("Failed to fetch subscribed channels:", error);
-
-      setSubscribedChannels([]);
+    if (forceState === true) {
+      return exists ? prev : [...prev, channelId];
     }
-  };
+
+    if (forceState === false) {
+      return exists ? prev.filter((id) => id !== channelId) : prev;
+    }
+
+    return exists
+      ? prev.filter((id) => id !== channelId)
+      : [...prev, channelId];
+  });
+};
+
+const fetchSubscribedChannels = async (userId) => {
+  try {
+    const { data } = await api.get(
+      `/subscription/u/${userId}`,
+      {
+        headers: {
+          "Cache-Control": "no-cache",
+        },
+      }
+    );
+
+    const channels = data.data || [];
+
+    const channelIds = channels
+      .map((subscription) => subscription.channel?._id)
+      .filter(Boolean);
+
+    setSubscribedChannels(channelIds);
+
+    // Tell components that subscription data has been refreshed
+    setSubscriptionsVersion((prev) => prev + 1);
+
+  } catch (error) {
+    console.error("Failed to fetch subscribed channels:", error);
+    setSubscribedChannels([]);
+  }
+};
 
   const fetchCurrentUser = async () => {
     try {
@@ -108,17 +115,18 @@ export const AuthProvider = ({ children }) => {
     setSubscribedChannels([]);
   };
 
-  const value = {
-    currentUser,
-    login,
-    register,
-    logout,
-    loading,
-    fetchCurrentUser,
-    subscribedChannels,
-    toggleLocalSub,
-    fetchSubscribedChannels,
-  };
+const value = {
+  currentUser,
+  login,
+  register,
+  logout,
+  loading,
+  fetchCurrentUser,
+  subscribedChannels,
+  toggleLocalSub,
+  fetchSubscribedChannels,
+  subscriptionsVersion,
+};
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -3,11 +3,22 @@ import { api } from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-export const useSubscription = (channelId, initialSubscribedStatus = false, initialSubscribersCount = 0) => {
-  const { currentUser, subscribedChannels, toggleLocalSub } = useAuth();
+export const useSubscription = (
+  channelId,
+  initialSubscribedStatus = false,
+  initialSubscribersCount = 0,
+) => {
+  const {
+  currentUser,
+  subscribedChannels,
+  toggleLocalSub,
+  fetchSubscribedChannels,
+} = useAuth();
   const navigate = useNavigate();
-  
-  const [subscribersCount, setSubscribersCount] = useState(initialSubscribersCount);
+
+  const [subscribersCount, setSubscribersCount] = useState(
+    initialSubscribersCount,
+  );
   const [loading, setLoading] = useState(false);
   const [activeChannelId, setActiveChannelId] = useState(channelId);
 
@@ -20,6 +31,12 @@ export const useSubscription = (channelId, initialSubscribedStatus = false, init
 
   // Sync internal global context state if initial props arrive from backend payload
 
+  useEffect(() => {
+    if (!activeChannelId) return;
+
+    toggleLocalSub(activeChannelId, initialSubscribedStatus);
+  }, [activeChannelId, initialSubscribedStatus]);
+
   // Sync local counter state
   useEffect(() => {
     setSubscribersCount(initialSubscribersCount);
@@ -30,10 +47,10 @@ export const useSubscription = (channelId, initialSubscribedStatus = false, init
   const toggleSubscription = async (eventOrId) => {
     let targetId = activeChannelId;
 
-    if (eventOrId && typeof eventOrId.preventDefault === 'function') {
+    if (eventOrId && typeof eventOrId.preventDefault === "function") {
       eventOrId.preventDefault();
       eventOrId.stopPropagation();
-    } else if (typeof eventOrId === 'string' && eventOrId) {
+    } else if (typeof eventOrId === "string" && eventOrId) {
       targetId = eventOrId;
     }
 
@@ -50,7 +67,7 @@ export const useSubscription = (channelId, initialSubscribedStatus = false, init
 
     // Execute instant Optimistic UI Update directly into Global App Context
     toggleLocalSub(targetId, !previousSubState);
-    setSubscribersCount(prev => (previousSubState ? prev - 1 : prev + 1));
+    setSubscribersCount((prev) => (previousSubState ? prev - 1 : prev + 1));
     setLoading(true);
 
     try {
@@ -58,13 +75,15 @@ export const useSubscription = (channelId, initialSubscribedStatus = false, init
       await api.post(`/subscription/c/${targetId}`);
     } catch (error) {
       console.error("Error toggling subscription, rolling back...", error);
-      
+
       // Execute Rollback in Global Context
       toggleLocalSub(targetId, previousSubState);
       setSubscribersCount(previousCount);
 
       if (error.response?.status === 429) {
-        alert("You're clicking too fast! Please wait a moment before trying again.");
+        alert(
+          "You're clicking too fast! Please wait a moment before trying again.",
+        );
       }
     } finally {
       setLoading(false);
