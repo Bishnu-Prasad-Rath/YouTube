@@ -2,6 +2,7 @@ import { Worker } from "bullmq";
 import { redisClient } from "../config/redis.config.js";
 import { Video } from "../models/video.model.js";
 import { incrementViews } from "../redis/cache/dashboard.cache.js";
+import { deleteVideoCache } from "../redis/cache/video.cache.js";
 import { trendingQueue } from "../queues/trending.queue.js";
 
 const viewWorker = new Worker(
@@ -47,13 +48,19 @@ const viewWorker = new Worker(
     }
 
     // --------------------------------------------------
-    // 2. Update dashboard
+    // 2. Invalidate stale video cache
+    // --------------------------------------------------
+
+    await deleteVideoCache(videoId);
+
+    // --------------------------------------------------
+    // 3. Update dashboard
     // --------------------------------------------------
 
     await incrementViews(updatedVideo.owner);
 
     // --------------------------------------------------
-    // 3. Queue trending recalculation
+    // 4. Queue trending recalculation
     // --------------------------------------------------
 
     await trendingQueue.add(

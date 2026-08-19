@@ -10,8 +10,7 @@ const formatCount = (n) => {
   if (n >= 1_000_000)
     return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
 
-  if (n >= 1_000)
-    return `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}K`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}K`;
 
   return String(n);
 };
@@ -44,31 +43,19 @@ export const LikeButton = ({ videoId }) => {
       setStatusLoading(true);
 
       try {
-        const { data } = await api.get(
-          `/like/status/v/${videoId}`
-        );
+        const { data } = await api.get(`/like/status/v/${videoId}`);
 
         if (cancelled) return;
 
-        const {
-          isLiked: liked,
-          likesCount: count,
-        } = data.data || {};
+        const { isLiked: liked, likesCount: count } = data.data || {};
 
         setIsLiked(Boolean(liked));
 
-        setLikesCount(
-          typeof count === "number"
-            ? Math.max(0, count)
-            : 0
-        );
+        setLikesCount(typeof count === "number" ? Math.max(0, count) : 0);
       } catch (err) {
         if (cancelled) return;
 
-        console.error(
-          "[LikeButton] Failed to fetch like status:",
-          err
-        );
+        console.error("[LikeButton] Failed to fetch like status:", err);
 
         setIsLiked(false);
         setLikesCount(0);
@@ -109,9 +96,7 @@ export const LikeButton = ({ videoId }) => {
     setIsLiked(!prevLiked);
 
     setLikesCount((current) =>
-      prevLiked
-        ? Math.max(0, current - 1)
-        : current + 1
+      prevLiked ? Math.max(0, current - 1) : current + 1,
     );
 
     setPending(true);
@@ -122,14 +107,9 @@ export const LikeButton = ({ videoId }) => {
       // SERVER
       // -----------------------------------------------------
 
-      const { data } = await api.post(
-        `/like/toggle/v/${videoId}`
-      );
+      const { data } = await api.post(`/like/toggle/v/${videoId}`);
 
-      const {
-        action,
-        totalLikes,
-      } = data.data || {};
+      const { action, totalLikes } = data.data || {};
 
       // -----------------------------------------------------
       // SERVER IS SOURCE OF TRUTH
@@ -138,15 +118,10 @@ export const LikeButton = ({ videoId }) => {
       setIsLiked(action === "like");
 
       if (typeof totalLikes === "number") {
-        setLikesCount(
-          Math.max(0, totalLikes)
-        );
+        setLikesCount(Math.max(0, totalLikes));
       }
     } catch (err) {
-      console.error(
-        "[LikeButton] Like toggle failed:",
-        err
-      );
+      console.error("[LikeButton] Like toggle failed:", err);
 
       // -----------------------------------------------------
       // ROLLBACK OPTIMISTIC UPDATE
@@ -155,9 +130,7 @@ export const LikeButton = ({ videoId }) => {
       setIsLiked(prevLiked);
       setLikesCount(prevCount);
 
-      setError(
-        "SYSTEM FAILURE: LIKE REJECTED"
-      );
+      setError("SYSTEM FAILURE: LIKE REJECTED");
 
       setTimeout(() => {
         setError(null);
@@ -165,20 +138,13 @@ export const LikeButton = ({ videoId }) => {
     } finally {
       setPending(false);
     }
-  }, [
-    videoId,
-    isLiked,
-    likesCount,
-    pending,
-    statusLoading,
-  ]);
+  }, [videoId, isLiked, likesCount, pending, statusLoading]);
 
   // ---------------------------------------------------------
   // BUTTON STATE
   // ---------------------------------------------------------
 
-  const buttonDisabled =
-    statusLoading || pending;
+  const buttonDisabled = statusLoading || pending;
 
   return (
     <>
@@ -212,16 +178,8 @@ export const LikeButton = ({ videoId }) => {
       <motion.button
         onClick={handleLikeToggle}
         disabled={buttonDisabled}
-        whileTap={
-          buttonDisabled
-            ? {}
-            : { scale: 1.3 }
-        }
-        animate={
-          isLiked
-            ? { scale: [1, 1.1, 1] }
-            : {}
-        }
+        whileTap={buttonDisabled ? {} : { scale: 1.3 }}
+        animate={isLiked ? { scale: [1, 1.1, 1] } : {}}
         transition={{ duration: 0.3 }}
         className={`flex items-center gap-2 px-4 py-2.5 border-4 border-neoBlack font-black text-base uppercase tracking-wide transition-all
           shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
@@ -233,11 +191,7 @@ export const LikeButton = ({ videoId }) => {
               : "hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
           }
 
-          ${
-            isLiked
-              ? "bg-[#FF0055] text-white"
-              : "bg-white text-black"
-          }
+          ${isLiked ? "bg-[#FF0055] text-white" : "bg-white text-black"}
         `}
       >
         <motion.span
@@ -260,9 +214,7 @@ export const LikeButton = ({ videoId }) => {
           <ThumbsUp
             size={20}
             className={`stroke-[3] transition-colors ${
-              isLiked
-                ? "fill-white/40"
-                : ""
+              isLiked ? "fill-white/40" : ""
             }`}
           />
         </motion.span>
@@ -270,13 +222,10 @@ export const LikeButton = ({ videoId }) => {
         <span
           className="text-base font-black"
           style={{
-            WebkitTextStroke:
-              "0.5px currentColor",
+            WebkitTextStroke: "0.5px currentColor",
           }}
         >
-          {statusLoading
-            ? "..."
-            : formatCount(likesCount)}
+          {statusLoading ? "..." : formatCount(likesCount)}
         </span>
       </motion.button>
     </>
