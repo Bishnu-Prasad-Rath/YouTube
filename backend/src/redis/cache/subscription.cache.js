@@ -12,10 +12,12 @@ const removeSubscription = async (userId, channelId) => {
 };
 
 const isSubscribed = async (userId, channelId) => {
-  return await redisClient.sismember(
+  const result = await redisClient.sismember(
     CACHE_KEYS.USER_SUBSCRIPTIONS(userId),
     channelId
   );
+
+  return Boolean(result);
 };
 
 const getSubscribersCount = (channelId) =>
