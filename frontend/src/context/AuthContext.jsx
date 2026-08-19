@@ -11,78 +11,101 @@ export const AuthProvider = ({ children }) => {
   const [subscribedChannels, setSubscribedChannels] = useState([]);
 
   const toggleLocalSub = (channelId, forceState) => {
-    setSubscribedChannels(prev => {
-      // If forceState is true, add if missing
-      if (forceState === true && !prev.includes(channelId)) return [...prev, channelId];
-      // If forceState is false, remove if present
-      if (forceState === false) return prev.filter(id => id !== channelId);
-      // If undefined, just toggle
-      if (forceState === undefined) {
-         if (prev.includes(channelId)) return prev.filter(id => id !== channelId);
-         else return [...prev, channelId];
+    setSubscribedChannels((prev) => {
+      if (forceState === true && !prev.includes(channelId)) {
+        return [...prev, channelId];
       }
+
+      if (forceState === false) {
+        return prev.filter((id) => id !== channelId);
+      }
+
+      if (forceState === undefined) {
+        if (prev.includes(channelId)) {
+          return prev.filter((id) => id !== channelId);
+        }
+
+        return [...prev, channelId];
+      }
+
       return prev;
     });
   };
 
-const fetchCurrentUser = async () => {
-  try {
-    const { data } = await api.get(
-      "/users/current-user",
-      {
+  const fetchSubscribedChannels = async (userId) => {
+    try {
+      const { data } = await api.get(`/subscription/u/${userId}`);
+
+      const channels = data.data || [];
+
+      const channelIds = channels
+        .map((subscription) => subscription.channel?._id)
+        .filter(Boolean);
+
+      setSubscribedChannels(channelIds);
+    } catch (error) {
+      console.error("Failed to fetch subscribed channels:", error);
+
+      setSubscribedChannels([]);
+    }
+  };
+
+  const fetchCurrentUser = async () => {
+    try {
+      const { data } = await api.get("/users/current-user", {
         timeout: 5000,
-      }
-    );
+      });
 
-    setCurrentUser(data.data);
+      const user = data.data;
 
-  } catch (error) {
+      setCurrentUser(user);
 
-    setCurrentUser(null);
-
-  } finally {
-
-    setLoading(false);
-  }
-};
+      await fetchSubscribedChannels(user._id);
+    } catch (error) {
+      setCurrentUser(null);
+      setSubscribedChannels([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchCurrentUser();
   }, []);
 
-const login = async (email, username, password) => {
-  setLoading(true);
+  const login = async (email, username, password) => {
+    setLoading(true);
 
-  try {
+    try {
+      await api.post("/users/login", {
+        email,
+        username,
+        password,
+      });
 
-    await api.post("/users/login", {
-      email,
-      username,
-      password,
-    });
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
-    // Wait for cookies to settle
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    await fetchCurrentUser();
-
-  } finally {
-
-    setLoading(false);
-  }
-};
+      await fetchCurrentUser();
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const register = async (formData) => {
-    // form data to handle avatar and coverImage
     const { data } = await api.post("/users/register", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     });
+
     return data;
   };
 
   const logout = async () => {
     await api.post("/users/logout");
+
     setCurrentUser(null);
+    setSubscribedChannels([]);
   };
 
   const value = {
@@ -94,11 +117,8 @@ const login = async (email, username, password) => {
     fetchCurrentUser,
     subscribedChannels,
     toggleLocalSub,
+    fetchSubscribedChannels,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
