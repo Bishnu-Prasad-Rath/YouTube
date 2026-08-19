@@ -6,6 +6,7 @@ import http from "http";
 import { Server } from "socket.io";
 import { initSocket } from "./socket/socket.js";
 import { setIO } from "./socket/socketInstance.js";
+import "./workers/view.worker.js";
 
 dotenv.config({
   path: "./.env",

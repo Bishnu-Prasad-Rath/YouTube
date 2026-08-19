@@ -99,3 +99,23 @@ const viewWorker = new Worker(
     stalledInterval: 30000,
   }
 );
+
+viewWorker.on("completed", (job, result) => {
+  console.log("[BullMQ][views] Job completed:", {
+    jobId: job.id,
+    result,
+  });
+});
+
+viewWorker.on("failed", (job, err) => {
+  console.error("[BullMQ][views] Job failed:", {
+    jobId: job?.id,
+    error: err.message,
+  });
+});
+
+viewWorker.on("error", (err) => {
+  console.error("[BullMQ][views] Worker error:", err);
+});
+
+console.log("🚀 [BullMQ][views] Worker started and listening...");
