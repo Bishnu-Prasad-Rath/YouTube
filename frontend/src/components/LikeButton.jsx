@@ -7,82 +7,178 @@ const isValidObjectId = (id) => /^[a-f\d]{24}$/i.test(id);
 
 /** Format numbers: 1200 → "1.2K", 1500000 → "1.5M" */
 const formatCount = (n) => {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}K`;
+  if (n >= 1_000_000)
+    return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+
+  if (n >= 1_000)
+    return `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}K`;
+
   return String(n);
 };
 
-/**
- * Neobrutalist LikeButton — prop-driven, syncs via GET /like/status/v/:videoId.
- * Works identically in VideoDetail and PlaylistPlayerPage.
- * @param {{ videoId: string }} props
- */
 export const LikeButton = ({ videoId }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
+
+  // Initial GET / status request
+  const [statusLoading, setStatusLoading] = useState(true);
+
+  // POST toggle request
   const [pending, setPending] = useState(false);
+
   const [error, setError] = useState(null);
 
-  // ── Fetch like status for THIS video (re-runs on videoId change) ──
+  // ---------------------------------------------------------
+  // FETCH LIKE STATUS
+  // ---------------------------------------------------------
+
   useEffect(() => {
-    if (!videoId || !isValidObjectId(videoId)) return;
+    if (!videoId || !isValidObjectId(videoId)) {
+      setStatusLoading(false);
+      return;
+    }
+
     let cancelled = false;
 
     const fetchStatus = async () => {
+      setStatusLoading(true);
+
       try {
-        const { data } = await api.get(`/like/status/v/${videoId}`);
+        const { data } = await api.get(
+          `/like/status/v/${videoId}`
+        );
+
         if (cancelled) return;
-        const { isLiked: liked, likesCount: count } = data.data || {};
-        setIsLiked(!!liked);
-        setLikesCount(typeof count === "number" ? Math.max(0, count) : 0);
-      } catch {
+
+        const {
+          isLiked: liked,
+          likesCount: count,
+        } = data.data || {};
+
+        setIsLiked(Boolean(liked));
+
+        setLikesCount(
+          typeof count === "number"
+            ? Math.max(0, count)
+            : 0
+        );
+      } catch (err) {
+        if (cancelled) return;
+
+        console.error(
+          "[LikeButton] Failed to fetch like status:",
+          err
+        );
+
+        setIsLiked(false);
+        setLikesCount(0);
+      } finally {
         if (!cancelled) {
-          setIsLiked(false);
-          setLikesCount(0);
+          setStatusLoading(false);
         }
       }
     };
 
     fetchStatus();
-    return () => { cancelled = true; };
+
+    return () => {
+      cancelled = true;
+    };
   }, [videoId]);
 
-  // ── Optimistic toggle ────────────────────────────────────
-  const handleLikeToggle = useCallback(async () => {
-    if (!videoId || !isValidObjectId(videoId) || pending) return;
+  // ---------------------------------------------------------
+  // TOGGLE LIKE
+  // ---------------------------------------------------------
 
-    // Snapshot for revert
+  const handleLikeToggle = useCallback(async () => {
+    // Do NOT allow a toggle while initial status is loading
+    if (statusLoading) return;
+
+    // Do NOT allow duplicate requests
+    if (pending) return;
+
+    if (!videoId || !isValidObjectId(videoId)) return;
+
     const prevLiked = isLiked;
     const prevCount = likesCount;
 
-    // A — Immediate local update
+    // -------------------------------------------------------
+    // OPTIMISTIC UI
+    // -------------------------------------------------------
+
     setIsLiked(!prevLiked);
-    setLikesCount((c) => (prevLiked ? Math.max(0, c - 1) : c + 1));
+
+    setLikesCount((current) =>
+      prevLiked
+        ? Math.max(0, current - 1)
+        : current + 1
+    );
+
     setPending(true);
     setError(null);
 
     try {
-      // B — Backend sync (withCredentials via shared axios instance)
-      const { data } = await api.post(`/like/toggle/v/${videoId}`);
-      const { action, totalLikes } = data.data || {};
+      // -----------------------------------------------------
+      // SERVER
+      // -----------------------------------------------------
 
-      // Server truth overrides optimistic guess
+      const { data } = await api.post(
+        `/like/toggle/v/${videoId}`
+      );
+
+      const {
+        action,
+        totalLikes,
+      } = data.data || {};
+
+      // -----------------------------------------------------
+      // SERVER IS SOURCE OF TRUTH
+      // -----------------------------------------------------
+
       setIsLiked(action === "like");
+
       if (typeof totalLikes === "number") {
-        setLikesCount(Math.max(0, totalLikes));
+        setLikesCount(
+          Math.max(0, totalLikes)
+        );
       }
     } catch (err) {
-      // C — Revert on failure
-      console.error("Like toggle failed:", err);
+      console.error(
+        "[LikeButton] Like toggle failed:",
+        err
+      );
+
+      // -----------------------------------------------------
+      // ROLLBACK OPTIMISTIC UPDATE
+      // -----------------------------------------------------
+
       setIsLiked(prevLiked);
       setLikesCount(prevCount);
 
-      setError("SYSTEM FAILURE: LIKE REJECTED");
-      setTimeout(() => setError(null), 3000);
+      setError(
+        "SYSTEM FAILURE: LIKE REJECTED"
+      );
+
+      setTimeout(() => {
+        setError(null);
+      }, 3000);
     } finally {
       setPending(false);
     }
-  }, [videoId, isLiked, likesCount, pending]);
+  }, [
+    videoId,
+    isLiked,
+    likesCount,
+    pending,
+    statusLoading,
+  ]);
+
+  // ---------------------------------------------------------
+  // BUTTON STATE
+  // ---------------------------------------------------------
+
+  const buttonDisabled =
+    statusLoading || pending;
 
   return (
     <>
@@ -90,9 +186,21 @@ export const LikeButton = ({ videoId }) => {
       <AnimatePresence>
         {error && (
           <motion.div
-            initial={{ y: -60, opacity: 0, x: "-50%" }}
-            animate={{ y: 0, opacity: 1, x: "-50%" }}
-            exit={{ y: -60, opacity: 0, x: "-50%" }}
+            initial={{
+              y: -60,
+              opacity: 0,
+              x: "-50%",
+            }}
+            animate={{
+              y: 0,
+              opacity: 1,
+              x: "-50%",
+            }}
+            exit={{
+              y: -60,
+              opacity: 0,
+              x: "-50%",
+            }}
             className="fixed top-6 left-1/2 z-[100] px-6 py-3 bg-neoYellow border-[3px] border-neoBlack shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] font-black uppercase text-sm tracking-wider"
           >
             {error}
@@ -103,34 +211,72 @@ export const LikeButton = ({ videoId }) => {
       {/* Like Button */}
       <motion.button
         onClick={handleLikeToggle}
-        disabled={pending}
-        whileTap={{ scale: 1.3 }}
-        animate={isLiked ? { scale: [1, 1.1, 1] } : {}}
+        disabled={buttonDisabled}
+        whileTap={
+          buttonDisabled
+            ? {}
+            : { scale: 1.3 }
+        }
+        animate={
+          isLiked
+            ? { scale: [1, 1.1, 1] }
+            : {}
+        }
         transition={{ duration: 0.3 }}
         className={`flex items-center gap-2 px-4 py-2.5 border-4 border-neoBlack font-black text-base uppercase tracking-wide transition-all
           shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
           active:translate-x-[2px] active:translate-y-[2px] active:shadow-none
-          ${pending ? "opacity-60 cursor-not-allowed" : "hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"}
-          ${isLiked ? "bg-[#FF0055] text-white" : "bg-white text-black"}
+
+          ${
+            buttonDisabled
+              ? "opacity-60 cursor-not-allowed"
+              : "hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
+          }
+
+          ${
+            isLiked
+              ? "bg-[#FF0055] text-white"
+              : "bg-white text-black"
+          }
         `}
       >
         <motion.span
           key={isLiked ? "liked" : "not-liked"}
-          initial={{ scale: 0.6, rotate: -20 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: "spring", stiffness: 400, damping: 15 }}
+          initial={{
+            scale: 0.6,
+            rotate: -20,
+          }}
+          animate={{
+            scale: 1,
+            rotate: 0,
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 400,
+            damping: 15,
+          }}
           className="inline-flex"
         >
           <ThumbsUp
             size={20}
-            className={`stroke-[3] transition-colors ${isLiked ? "fill-white/40" : ""}`}
+            className={`stroke-[3] transition-colors ${
+              isLiked
+                ? "fill-white/40"
+                : ""
+            }`}
           />
         </motion.span>
+
         <span
           className="text-base font-black"
-          style={{ WebkitTextStroke: "0.5px currentColor" }}
+          style={{
+            WebkitTextStroke:
+              "0.5px currentColor",
+          }}
         >
-          {formatCount(likesCount)}
+          {statusLoading
+            ? "..."
+            : formatCount(likesCount)}
         </span>
       </motion.button>
     </>
