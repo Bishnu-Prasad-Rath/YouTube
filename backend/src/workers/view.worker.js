@@ -47,21 +47,15 @@ const viewWorker = new Worker(
       throw new Error(`Video not found: ${videoId}`);
     }
 
-    // --------------------------------------------------
     // 2. Invalidate stale video cache
-    // --------------------------------------------------
 
     await deleteVideoCache(videoId);
 
-    // --------------------------------------------------
     // 3. Update dashboard
-    // --------------------------------------------------
 
     await incrementViews(updatedVideo.owner);
 
-    // --------------------------------------------------
     // 4. Queue trending recalculation
-    // --------------------------------------------------
 
     await trendingQueue.add(
       "recalculate",

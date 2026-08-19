@@ -182,7 +182,11 @@ const getVideoById = asyncHandler(async (req, res) => {
   // View increment
 
 if (req.query.inc === "true") {
-  await viewQueue.add(
+  console.log("[BullMQ][views] Queueing view", {
+    videoId,
+  });
+
+  const job = await viewQueue.add(
     "increment",
     {
       videoId,
@@ -191,6 +195,11 @@ if (req.query.inc === "true") {
       jobId: `view:${videoId}:${Date.now()}`,
     }
   );
+
+  console.log("[BullMQ][views] Queued successfully", {
+    jobId: job.id,
+    videoId,
+  });
 }
 
   // Cache hit response
