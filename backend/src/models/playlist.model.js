@@ -19,6 +19,11 @@ owner : {
 } 
 },{timestamps : true})
 
+playlistSchema.index({
+    owner: 1,
+    createdAt: -1,
+});
+
 const Playlist = mongoose.model("Playlist",playlistSchema)
 
 export {Playlist}

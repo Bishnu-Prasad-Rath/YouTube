@@ -21,6 +21,11 @@ tweetSchema.virtual("replies", {
     foreignField: "tweet"
 });
 
+tweetSchema.index({
+    owner: 1,
+    createdAt: -1,
+});
+
 const Tweet = mongoose.model("Tweet",tweetSchema)
 
 export {Tweet}

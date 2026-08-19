@@ -30,6 +30,16 @@ const liveSchema = new mongoose.Schema({
   timestamps: true,
 });
 
+liveSchema.index({
+    isActive: 1,
+    createdAt: -1,
+});
+
+liveSchema.index({
+    streamer: 1,
+    isActive: 1,
+});
+
 const Live = mongoose.model("Live", liveSchema);
 
 export { Live };

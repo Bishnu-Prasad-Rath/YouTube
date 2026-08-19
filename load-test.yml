@@ -1,55 +1,30 @@
 config:
-  version: "2"
   target: "https://youtube-k7zk.onrender.com"
-  
-  http:
-    timeout: 30
 
   phases:
-    - duration: 45
-      arrivalRate: 1
-      name: "Gentle Awakening"
-    - duration: 60
-      arrivalRate: 2
-      name: "Light Load Assessment"
+    - duration: 10
+      arrivalRate: 100
+      name: "100 RPS"
 
-  payload:
-    path: "./users.csv"
-    fields:
-      - "email"
-      - "password"
-    order: sequence
+    - duration: 10
+      arrivalRate: 200
+      name: "200 RPS"
+
+    - duration: 10
+      arrivalRate: 300
+      name: "300 RPS"
+
+    - duration: 10
+      arrivalRate: 500
+      name: "500 RPS"
 
 scenarios:
-  - name: "Watch Video Journey"
+  - name: "Cached Video Stress Test"
+
     flow:
-      # 1. Login
-      - post:
-          url: "/api/v1/users/login"
-          json:
-            email: "{{ email }}"
-            password: "{{ password }}"
-          capture:
-            - header: "set-cookie"
-              as: "authCookie"
-
-      # 2. Get Homepage Videos
-      - get:
-          url: "/api/v1/videos"
-          headers:
-            Cookie: "{{ authCookie }}"
-
-      # 3. Watch Video
       - get:
           url: "/api/v1/videos/69fb35bdbee7327b3a4acafd"
-          headers:
-            Cookie: "{{ authCookie }}"
 
-      # 4. Simulate watching
-      - think: 3
-
-      # 5. Logout
-      - post:
-          url: "/api/v1/users/logout"
           headers:
-            Cookie: "{{ authCookie }}"
+            Authorization: "Bearer {{ $processEnvironment.LOAD_TEST_ACCESS_TOKEN }}"
+            x-load-test-key: "{{ $processEnvironment.LOAD_TEST_SECRET }}"

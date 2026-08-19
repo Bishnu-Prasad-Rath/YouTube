@@ -18,6 +18,14 @@ subscriptionSchema.index(
   { unique: true }
 )
 
+subscriptionSchema.index({
+    channel: 1,
+});
+
+subscriptionSchema.index({
+    subscriber: 1,
+});
+
 const Subscription = mongoose.model("Subscription",subscriptionSchema)
 
 export {Subscription}

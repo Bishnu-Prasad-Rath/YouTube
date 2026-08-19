@@ -24,6 +24,10 @@ const commentSchema = new Schema(
 
 commentSchema.plugin(mongooseAggregatePaginate);
 commentSchema.index({ video: 1, createdAt: -1 });
+commentSchema.index({
+    tweet: 1,
+    createdAt: -1,
+});
 
 
 const Comment = mongoose.model("Comment",commentSchema) 
