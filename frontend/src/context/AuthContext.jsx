@@ -115,6 +115,10 @@ const fetchSubscribedChannels = async (userId) => {
     setSubscribedChannels([]);
   };
 
+  const notifySubscriptionChange = () => {
+  setSubscriptionsVersion((prev) => prev + 1);
+};
+
 const value = {
   currentUser,
   login,
@@ -126,6 +130,7 @@ const value = {
   toggleLocalSub,
   fetchSubscribedChannels,
   subscriptionsVersion,
+  notifySubscriptionChange,
 };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

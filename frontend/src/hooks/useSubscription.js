@@ -9,33 +9,35 @@ export const useSubscription = (
   initialSubscribersCount = 0,
 ) => {
   const {
-  currentUser,
-  subscribedChannels,
-  toggleLocalSub,
-  fetchSubscribedChannels,
-} = useAuth();
+    currentUser,
+    subscribedChannels,
+    toggleLocalSub,
+    notifySubscriptionChange,
+  } = useAuth();
+
   const navigate = useNavigate();
 
   const [subscribersCount, setSubscribersCount] = useState(
     initialSubscribersCount,
   );
+
   const [loading, setLoading] = useState(false);
+
   const [activeChannelId, setActiveChannelId] = useState(channelId);
 
-  // Reactive Hook: watch channelId prop
+  // Watch channel ID changes
   useEffect(() => {
     if (channelId) {
       setActiveChannelId(channelId);
     }
   }, [channelId]);
 
-  // Sync internal global context state if initial props arrive from backend payload
-
-  // Sync local counter state
+  // Sync subscriber count
   useEffect(() => {
     setSubscribersCount(initialSubscribersCount);
   }, [initialSubscribersCount]);
 
+  // Global subscription state
   const isSubscribed = subscribedChannels.includes(activeChannelId);
 
   const toggleSubscription = async (eventOrId) => {
@@ -48,7 +50,6 @@ export const useSubscription = (
       targetId = eventOrId;
     }
 
-    // Loading Guard check as requested
     if (!targetId) return;
 
     if (!currentUser) {
@@ -59,19 +60,39 @@ export const useSubscription = (
     const previousSubState = isSubscribed;
     const previousCount = subscribersCount;
 
-    // Execute instant Optimistic UI Update directly into Global App Context
+    // 1. Optimistic UI update
+
     toggleLocalSub(targetId, !previousSubState);
-    setSubscribersCount((prev) => (previousSubState ? prev - 1 : prev + 1));
+
+    setSubscribersCount((prev) =>
+      previousSubState ? Math.max(0, prev - 1) : prev + 1,
+    );
+
     setLoading(true);
 
     try {
-      // Make backend API request. Note: Route is singular `/subscription/` per backend app.js mapping
-      await api.post(`/subscription/c/${targetId}`);
+      // 2. Backend toggle
+
+      const response = await api.post(`/subscription/c/${targetId}`);
+
+      const result = response.data.data;
+
+      // 3. Trust backend final state
+
+      toggleLocalSub(targetId, result.isSubscribed);
+
+      setSubscribersCount(result.totalSubscribers);
+
+      // 4. Tell Sidebar to refresh
+
+      notifySubscriptionChange();
     } catch (error) {
       console.error("Error toggling subscription, rolling back...", error);
 
-      // Execute Rollback in Global Context
+      // 5. Rollback
+
       toggleLocalSub(targetId, previousSubState);
+
       setSubscribersCount(previousCount);
 
       if (error.response?.status === 429) {
@@ -84,5 +105,10 @@ export const useSubscription = (
     }
   };
 
-  return { isSubscribed, subscribersCount, toggleSubscription, loading };
+  return {
+    isSubscribed,
+    subscribersCount,
+    toggleSubscription,
+    loading,
+  };
 };

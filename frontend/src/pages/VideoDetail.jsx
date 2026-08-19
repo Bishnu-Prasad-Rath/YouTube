@@ -23,7 +23,7 @@ import { VideoDetailSkeleton } from "../components/Skeletons";
 
 export const VideoDetail = () => {
   const { videoId } = useParams();
-  const { currentUser } = useAuth();
+  const { currentUser, toggleLocalSub } = useAuth();
   const [video, setVideo] = useState(null);
   const [comments, setComments] = useState([]);
   const [recommended, setRecommended] = useState([]);
@@ -87,13 +87,26 @@ export const VideoDetail = () => {
         setRecLoading(false);
 
         // Fetch channel state for subs after parallel resolution
-        if (fetchedVideo?.owner?.username) {
-          const channelRes = await api.get(
-            `/users/c/${fetchedVideo.owner.username}`,
-          );
-          setInitialSubState(channelRes.data.data?.isSubscribed || false);
-          setInitialSubCount(channelRes.data.data?.subscribersCount || 0);
-        }
+if (fetchedVideo?.owner?.username) {
+  const channelRes = await api.get(
+    `/users/c/${fetchedVideo.owner.username}`
+  );
+
+  const isSubscribed =
+    channelRes.data.data?.isSubscribed || false;
+
+  const subscribersCount =
+    channelRes.data.data?.subscribersCount || 0;
+
+  setInitialSubState(isSubscribed);
+  setInitialSubCount(subscribersCount);
+
+  // Sync global subscription state with REAL backend state
+  toggleLocalSub(
+    fetchedVideo.owner._id,
+    isSubscribed
+  );
+}
       } catch (error) {
         console.error(error);
         setRecLoading(false);
@@ -219,7 +232,7 @@ export const VideoDetail = () => {
 
   // toggleSubscription is imported from custom hook
 
-if (!video) return <VideoDetailSkeleton />;
+  if (!video) return <VideoDetailSkeleton />;
 
   console.log("Current Comments in State:", comments.length);
 
