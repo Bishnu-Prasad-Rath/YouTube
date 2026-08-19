@@ -23,7 +23,15 @@ const SidebarSubscriptions = ({ expanded }) => {
     if (!currentUser) return;
     const fetchSubs = async () => {
       try {
-        const { data } = await api.get(`/subscription/u/${currentUser._id}`);
+        const { data } = await api.get(
+  `/subscription/u/${currentUser._id}`,
+  {
+    headers: {
+      "Cache-Control": "no-cache",
+      "Pragma": "no-cache",
+    },
+  }
+);
         setChannels(data.data || []);
       } catch (err) {
         console.error("Failed to fetch sidebar subs", err);

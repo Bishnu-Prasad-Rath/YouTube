@@ -102,10 +102,6 @@ if (fetchedVideo?.owner?.username) {
   setInitialSubCount(subscribersCount);
 
   // Sync global subscription state with REAL backend state
-  toggleLocalSub(
-    fetchedVideo.owner._id,
-    isSubscribed
-  );
 }
       } catch (error) {
         console.error(error);
