@@ -122,81 +122,70 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid comment ID");
   }
 
-  // 1. Fetch the comment ONCE to prevent redeclaration errors
-  const comment = await Comment.findById(commentId)
-  
+  const comment = await Comment.findById(commentId);
   if (!comment) throw new ApiError(404, "Comment not found");
 
-  const channelId = comment.owner;
   const videoId = comment.video;
+  const userId = req.user?._id;
+
+  if (!userId) throw new ApiError(401, "Unauthorized");
 
   const existingLike = await Like.findOne({
     comment: commentId,
-    likedBy: req.user._id,
+    likedBy: userId,
   });
-
-  const io = getIO();
 
   let action;
   let like;
-  let totalLikes;
 
   if (existingLike) {
-    // UNLIKE Logic
     await Like.findByIdAndDelete(existingLike._id);
     action = "unlike";
-    await decrementLikes(channelId, "comment");
+    // ✅ FIX: Use commentId, NOT channelId
+    await decrementLikes(commentId, "comment"); 
   } else {
-    // LIKE Logic
     like = await Like.create({
       comment: commentId,
-      likedBy: req.user._id,
+      likedBy: userId,
     });
     action = "like";
-    // NOTE: Removed the duplicate 'const comment' and 'const channelId' from here!
-    await incrementLikes(channelId, "comment");
+    // ✅ FIX: Use commentId, NOT channelId
+    await incrementLikes(commentId, "comment"); 
   }
 
-  totalLikes = await Like.countDocuments({ comment: commentId });
+  let totalLikes = await Like.countDocuments({ comment: commentId });
+  totalLikes = Number(totalLikes) || 0;
 
-  // 2. Clear the comment cache so the Playlist & Video pages sync up!
   if (videoId) {
     try {
       await deleteCommentsCache(videoId);
     } catch (cacheErr) {
-      console.error("Failed to delete comment cache:", cacheErr.message);
+      console.error("Cache delete failed (non-fatal):", cacheErr.message);
     }
   }
 
-  totalLikes = Number(totalLikes) || 0;
-
-  // 3. Fallback sync for Redis
-  if (totalLikes < 0) {
-    let redisLikes = await getCommentLikes(commentId);
-
-    if (redisLikes !== null) {
-      totalLikes = Number(redisLikes) || 0;
-    } else {
-      const dbCount = await Like.countDocuments({ comment: commentId });
-      await setCommentLikes(commentId, dbCount);
-      totalLikes = dbCount;
+  // ✅ FIX: Wrap Socket in try/catch so it never crashes the HTTP response
+  try {
+    const io = getIO();
+    if (io) {
+      io.to(`comment:${commentId}`).emit("comment:like", {
+        commentId,
+        userId,
+        action,
+        totalLikes,
+      });
     }
+  } catch (socketErr) {
+    console.error("Socket emit failed (non-fatal):", socketErr.message);
   }
 
-  res.status(200).json(
+  return res.status(200).json(
     new ApiResponse(
       200,
-      { like, action, totalLikes, isLiked: action === "like" },
+      { action, totalLikes, isLiked: action === "like" },
       action === "like" ? "Comment liked" : "Comment unliked"
     )
   );
-
-  io.to(`comment:${commentId}`).emit("comment:like", {
-    commentId,
-    userId: req.user._id,
-    action,
-    totalLikes,
-  });
 });
 
 const toggleTweetLike = asyncHandler(async (req, res) => {
