@@ -147,7 +147,6 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     await Like.findByIdAndDelete(existingLike._id);
     action = "unlike";
     await decrementLikes(channelId, "comment");
-    totalLikes = await decrementCommentLikes(commentId);
   } else {
     // LIKE Logic
     like = await Like.create({
@@ -157,8 +156,9 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     action = "like";
     // NOTE: Removed the duplicate 'const comment' and 'const channelId' from here!
     await incrementLikes(channelId, "comment");
-    totalLikes = await incrementCommentLikes(commentId);
   }
+
+  totalLikes = await Like.countDocuments({ comment: commentId });
 
   // 2. Clear the comment cache so the Playlist & Video pages sync up!
   if (videoId) {
