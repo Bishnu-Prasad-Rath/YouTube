@@ -20,6 +20,7 @@ const timeAgo = (dateStr) => {
 };
 
 export const Comment = ({ comment }) => {
+  console.log("🔍 Comment Data Received:", comment);
   const [isLiked, setIsLiked] = useState(comment?.isLiked || false);
   const [likeCount, setLikeCount] = useState(comment?.likesCount || comment?.likeCount || 0);
   const [pending, setPending] = useState(false);

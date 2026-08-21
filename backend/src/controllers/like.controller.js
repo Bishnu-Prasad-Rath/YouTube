@@ -143,7 +143,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     await Like.findByIdAndDelete(existingLike._id);
     action = "unlike";
     
-    // ✅ FIX: Use the correct function name and pass commentId
+    // ✅ FIX: Use correct function name and pass commentId
     await decrementCommentLikes(commentId); 
   } else {
     // LIKE Logic
@@ -153,7 +153,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     });
     action = "like";
     
-    // ✅ FIX: Use the correct function name and pass commentId
+    // ✅ FIX: Use correct function name and pass commentId
     await incrementCommentLikes(commentId); 
   }
 
@@ -183,10 +183,11 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     console.error("Socket emit failed (non-fatal):", socketErr.message);
   }
 
+  // ✅ RETURNS EXACT SAME VARIABLE NAMES AS YOUR ORIGINAL CODE
   return res.status(200).json(
     new ApiResponse(
       200,
-      { action, totalLikes, isLiked: action === "like" },
+      { like, action, totalLikes, isLiked: action === "like" },
       action === "like" ? "Comment liked" : "Comment unliked"
     )
   );

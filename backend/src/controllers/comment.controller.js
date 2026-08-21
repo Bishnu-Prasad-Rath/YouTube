@@ -20,72 +20,76 @@ const getVideoComments = asyncHandler(async (req, res) => {
 
   page = parseInt(page);
   limit = parseInt(limit);
+  const skip = (page - 1) * limit;
 
   console.time("FULL_REQUEST");
 
+  // 1. Check cache first
   const cached = await getCommentsCache(videoId, page);
-
   if (cached) {
-    console.log("Cached HIT");
+    console.log("Cache HIT");
     console.timeEnd("FULL_REQUEST");
-    return res
-      .status(200)
-      .json(new ApiResponse(200, cached, "Comments fetched from cache."));
+    return res.status(200).json(new ApiResponse(200, cached, "Comments fetched from cache."));
   }
 
-  console.timeEnd("FULL_REQUEST");
-
-  // Replace your basic .find() logic with this inside comment.controller.js
-const skip = (page - 1) * limit;
-
-const comments = await Comment.aggregate([
-  {
-    $match: { video: new mongoose.Types.ObjectId(videoId) }
-  },
-  {
-    $lookup: {
-      from: "users",
-      localField: "owner",
-      foreignField: "_id",
-      as: "owner"
-    }
-  },
-  {
-    $lookup: {
-      from: "likes",
-      localField: "_id",
-      foreignField: "comment",
-      as: "likes"
-    }
-  },
-  {
-    $addFields: {
-      owner: { $first: "$owner" },
-      likesCount: { $size: "$likes" },
-      isLiked: {
-        $cond: {
-          if: { $in: [req.user?._id, "$likes.likedBy"] },
-          then: true,
-          else: false
-        }
+  // 2. Fetch raw data (keep 'likes' array temporarily for JS checking)
+  const rawComments = await Comment.aggregate([
+    { $match: { video: new mongoose.Types.ObjectId(videoId) } },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner"
       }
-    }
-  },
-  { $sort: { createdAt: -1 } },
-  { $skip: skip },
-  { $limit: limit },
-  { $project: { likes: 0, "owner.password": 0, "owner.refreshToken": 0 } } // hide raw likes array and sensitive user data
-]);
+    },
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "comment",
+        as: "likes"
+      }
+    },
+    { $sort: { createdAt: -1 } },
+    { $skip: skip },
+    { $limit: limit }
+  ]);
 
-// Then cache and return as normal
+  // 3. Format in JavaScript to fix the ObjectId vs String bug safely
+  const userId = req.user?._id?.toString();
 
+  const comments = rawComments.map((comment) => {
+    const ownerData = comment.owner[0] || {};
+    
+    // Remove sensitive data exactly as your original $project did
+    delete ownerData.password;
+    delete ownerData.refreshToken;
+
+    // ✅ FIX: Safely compare both as strings. Guarantees a match.
+    const isLiked = userId 
+      ? comment.likes.some((like) => like.likedBy.toString() === userId)
+      : false;
+
+    // ✅ RETURN EXACT SAME VARIABLE NAMES AS YOUR ORIGINAL CODE
+    return {
+      ...comment, // Keeps _id, content, video, createdAt, updatedAt
+      owner: ownerData,
+      likesCount: comment.likes.length, // Exact same variable name
+      isLiked: isLiked,                  // Exact same variable name
+      likes: undefined                   // Hides the raw array from the final response
+    };
+  });
+
+  // 4. Cache the cleanly formatted data
   await setCommentsCache(videoId, page, comments);
+
+  console.timeEnd("FULL_REQUEST");
 
   return res
     .status(200)
     .json(new ApiResponse(200, comments, "Comment fetched successfully."));
 });
-
 const addComment = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   const { content } = req.body;
