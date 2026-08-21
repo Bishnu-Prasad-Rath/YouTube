@@ -20,16 +20,16 @@ const timeAgo = (dateStr) => {
 };
 
 export const Comment = ({ comment }) => {
-  // 1. Initialize from backend data, not 'false'
   const [isLiked, setIsLiked] = useState(comment?.isLiked || false);
   const [likeCount, setLikeCount] = useState(comment?.likesCount || comment?.likeCount || 0);
   const [pending, setPending] = useState(false);
 
-  // 2. The Interconnection Bridge: Resets state when switching videos in a playlist
+  // ✅ FIX: ONLY reset state when the comment ID changes (e.g., new video), 
+  // NOT on every parent re-render.
   useEffect(() => {
     setIsLiked(comment?.isLiked || false);
     setLikeCount(comment?.likesCount || comment?.likeCount || 0);
-  }, [comment]);
+  }, [comment?._id]); 
 
   const handleLikeToggle = useCallback(async () => {
     if (!comment?._id || pending) return;
@@ -37,18 +37,25 @@ export const Comment = ({ comment }) => {
     const prevLiked = isLiked;
     const prevCount = likeCount;
 
+    // Optimistic Update
     setIsLiked(!prevLiked);
     setLikeCount((c) => (prevLiked ? Math.max(0, c - 1) : c + 1));
     setPending(true);
 
     try {
       const { data } = await api.post(`/like/toggle/c/${comment._id}`);
-      const { action, totalLikes } = data.data || {};
+      const { action, totalLikes } = data?.data || {};
       
+      // Sync with server source-of-truth
       setIsLiked(action === "like");
-      if (typeof totalLikes === "number") setLikeCount(Math.max(0, totalLikes));
+      if (typeof totalLikes === "number") {
+        setLikeCount(Math.max(0, totalLikes));
+      }
     } catch (err) {
-      console.error("Comment like failed:", err);
+      // 🚨 This log will now tell us if the backend is still throwing a 500
+      console.error("❌ Comment like failed:", err.response?.data || err.message);
+      
+      // Rollback on failure
       setIsLiked(prevLiked);
       setLikeCount(prevCount);
     } finally {
