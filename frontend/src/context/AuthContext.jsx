@@ -57,24 +57,50 @@ const fetchSubscribedChannels = async (userId) => {
   }
 };
 
-  const fetchCurrentUser = async () => {
-    try {
-      const { data } = await api.get("/users/current-user", {
-        timeout: 5000,
-      });
+const fetchCurrentUser = async () => {
+  try {
+    const { data } = await api.get("/users/current-user", {
+      timeout: 5000,
+    });
 
-      const user = data.data;
+    let user = data.data;
+    console.log("CURRENT USER FROM AUTH:", data.data);
+console.log("AUTH AVATAR:", data.data?.avatar);
+    // Fetch the public channel profile to make sure
+    // avatar and other profile information are up to date.
+    if (user?.username) {
+      try {
+        const channelRes = await api.get(
+          `/users/c/${user.username}`
+        );
 
-      setCurrentUser(user);
+        const channel = channelRes.data.data;
 
-      await fetchSubscribedChannels(user._id);
-    } catch (error) {
-      setCurrentUser(null);
-      setSubscribedChannels([]);
-    } finally {
-      setLoading(false);
+        user = {
+          ...user,
+          avatar: channel?.avatar || user.avatar,
+        };
+      } catch (profileError) {
+        // Don't fail authentication just because
+        // the public profile request failed.
+        console.warn(
+          "Could not refresh profile avatar:",
+          profileError
+        );
+      }
     }
-  };
+
+    setCurrentUser(user);
+
+    await fetchSubscribedChannels(user._id);
+  } catch (error) {
+    console.error("Failed to fetch current user:", error);
+    setCurrentUser(null);
+    setSubscribedChannels([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchCurrentUser();
