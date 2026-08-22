@@ -7,8 +7,17 @@ import { useSubscription } from "../hooks/useSubscription";
 import { Comment } from "../components/Comment";
 import { LikeButton } from "../components/LikeButton";
 import {
-  Play, Pause, Volume2, VolumeX, Maximize, Minimize,
-  SkipBack, SkipForward, ListVideo, Film, MessageSquare,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  Maximize,
+  Minimize,
+  SkipBack,
+  SkipForward,
+  ListVideo,
+  Film,
+  MessageSquare,
 } from "lucide-react";
 
 const isValidObjectId = (id) => /^[a-f\d]{24}$/i.test(id);
@@ -69,7 +78,7 @@ export const PlaylistPlayerPage = () => {
       setProgress(0);
       setIsPlaying(false);
     },
-    [videos.length]
+    [videos.length],
   );
 
   // Auto-load new source when index changes
@@ -119,7 +128,7 @@ export const PlaylistPlayerPage = () => {
           return {
             ...prev,
             videos: prev.videos.map((v) =>
-              v._id === videoId ? { ...v, views: (v.views || 0) + 1 } : v
+              v._id === videoId ? { ...v, views: (v.views || 0) + 1 } : v,
             ),
           };
         });
@@ -175,10 +184,15 @@ export const PlaylistPlayerPage = () => {
   // Keyboard shortcuts
   useEffect(() => {
     const h = (e) => {
-      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
-      if (e.key === " ") { e.preventDefault(); togglePlay(); }
-      else if (e.key.toLowerCase() === "f") { e.preventDefault(); toggleFullscreen(); }
-      else if (e.key === "ArrowRight") goToVideo(currentVideoIndex + 1);
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")
+        return;
+      if (e.key === " ") {
+        e.preventDefault();
+        togglePlay();
+      } else if (e.key.toLowerCase() === "f") {
+        e.preventDefault();
+        toggleFullscreen();
+      } else if (e.key === "ArrowRight") goToVideo(currentVideoIndex + 1);
       else if (e.key === "ArrowLeft") goToVideo(currentVideoIndex - 1);
     };
     window.addEventListener("keydown", h);
@@ -218,7 +232,10 @@ export const PlaylistPlayerPage = () => {
           </div>
           <div className="lg:w-[30%] space-y-3">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="h-20 bg-gray-200 border-4 animate-pulse border-neoBlack" />
+              <div
+                key={i}
+                className="h-20 bg-gray-200 border-4 animate-pulse border-neoBlack"
+              />
             ))}
           </div>
         </div>
@@ -231,7 +248,9 @@ export const PlaylistPlayerPage = () => {
       <div className="max-w-xl mx-auto mt-20 text-center p-12 border-dashed border-4 border-neoBlack bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
         <Film size={56} className="mx-auto mb-4 stroke-[2] text-gray-400" />
         <p className="mb-2 text-3xl font-black uppercase">
-          {!playlist ? "Playlist Not Found" : "GRAVITY DEFIED: THIS PLAYLIST IS EMPTY"}
+          {!playlist
+            ? "Playlist Not Found"
+            : "GRAVITY DEFIED: THIS PLAYLIST IS EMPTY"}
         </p>
       </div>
     );
@@ -298,15 +317,36 @@ export const PlaylistPlayerPage = () => {
               {/* Buttons */}
               <div className="flex items-center justify-between text-white">
                 <div className="flex gap-3">
-                  <button onClick={togglePlay} className="p-2 border-2 border-black bg-[#8fff00] text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none">
-                    {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
+                  <button
+                    onClick={togglePlay}
+                    className="p-2 border-2 border-black bg-[#8fff00] text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none"
+                  >
+                    {isPlaying ? (
+                      <Pause className="w-5 h-5 fill-current" />
+                    ) : (
+                      <Play className="w-5 h-5 fill-current" />
+                    )}
                   </button>
-                  <button onClick={toggleMute} className="p-2 border-2 border-black bg-[#8fff00] text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none">
-                    {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                  <button
+                    onClick={toggleMute}
+                    className="p-2 border-2 border-black bg-[#8fff00] text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none"
+                  >
+                    {isMuted ? (
+                      <VolumeX className="w-5 h-5" />
+                    ) : (
+                      <Volume2 className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
-                <button onClick={toggleFullscreen} className="p-2 border-2 border-black bg-[#8fff00] text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none">
-                  {isFullscreen ? <Minimize className="w-5 h-5 stroke-[3]" /> : <Maximize className="w-5 h-5 stroke-[3]" />}
+                <button
+                  onClick={toggleFullscreen}
+                  className="p-2 border-2 border-black bg-[#8fff00] text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none"
+                >
+                  {isFullscreen ? (
+                    <Minimize className="w-5 h-5 stroke-[3]" />
+                  ) : (
+                    <Maximize className="w-5 h-5 stroke-[3]" />
+                  )}
                 </button>
               </div>
             </div>
@@ -318,7 +358,9 @@ export const PlaylistPlayerPage = () => {
               onClick={() => goToVideo(currentVideoIndex - 1)}
               disabled={currentVideoIndex === 0}
               className={`neo-btn flex items-center gap-2 uppercase text-sm bg-white ${
-                currentVideoIndex === 0 ? "opacity-40 cursor-not-allowed" : "hover:-translate-y-1"
+                currentVideoIndex === 0
+                  ? "opacity-40 cursor-not-allowed"
+                  : "hover:-translate-y-1"
               }`}
             >
               <SkipBack size={18} className="stroke-[3]" /> Previous
@@ -332,7 +374,9 @@ export const PlaylistPlayerPage = () => {
               onClick={() => goToVideo(currentVideoIndex + 1)}
               disabled={currentVideoIndex >= videos.length - 1}
               className={`neo-btn flex items-center gap-2 uppercase text-sm bg-white ${
-                currentVideoIndex >= videos.length - 1 ? "opacity-40 cursor-not-allowed" : "hover:-translate-y-1"
+                currentVideoIndex >= videos.length - 1
+                  ? "opacity-40 cursor-not-allowed"
+                  : "hover:-translate-y-1"
               }`}
             >
               Next <SkipForward size={18} className="stroke-[3]" />
@@ -340,10 +384,7 @@ export const PlaylistPlayerPage = () => {
           </div>
 
           {/* ═══ Creator Bar ═══ */}
-          <CreatorBar
-            currentVideo={currentVideo}
-            currentUser={currentUser}
-          />
+          <CreatorBar currentVideo={currentVideo} currentUser={currentUser} />
 
           {/* ═══ Comment Section ═══ */}
           <CommentSection
@@ -367,7 +408,8 @@ export const PlaylistPlayerPage = () => {
               <h2 className="text-lg font-black uppercase">{playlist.name}</h2>
             </div>
             <p className="text-sm font-bold text-black/60 line-clamp-1">
-              {playlist.description || "No description"} • {videos.length} videos
+              {playlist.description || "No description"} • {videos.length}{" "}
+              videos
             </p>
           </div>
 
@@ -393,7 +435,9 @@ export const PlaylistPlayerPage = () => {
                   }`}
                 >
                   {/* Index */}
-                  <span className={`font-black text-sm w-6 text-center flex-shrink-0 ${isActive ? "text-[#8fff00]" : "text-gray-400"}`}>
+                  <span
+                    className={`font-black text-sm w-6 text-center flex-shrink-0 ${isActive ? "text-[#8fff00]" : "text-gray-400"}`}
+                  >
                     {idx + 1}
                   </span>
 
@@ -444,10 +488,52 @@ export const PlaylistPlayerPage = () => {
 /* ═══════════════════════════════════════════════════════════ */
 const CreatorBar = ({ currentVideo, currentUser }) => {
   const owner = currentVideo?.owner;
+
   const hasOwner = owner && typeof owner === "object" && owner.username;
 
+  const [initialSubState, setInitialSubState] = useState(false);
+  const [initialSubCount, setInitialSubCount] = useState(0);
+
   const { isSubscribed, subscribersCount, toggleSubscription, loading } =
-    useSubscription(owner?._id, false, 0);
+    useSubscription(owner?._id, initialSubState, initialSubCount);
+
+  // Fetch REAL channel subscription state/count
+  useEffect(() => {
+    if (!owner?.username) {
+      setInitialSubState(false);
+      setInitialSubCount(0);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchChannelState = async () => {
+      try {
+        const { data } = await api.get(`/users/c/${owner.username}`);
+
+        if (cancelled) return;
+
+        const channelData = data.data;
+
+        setInitialSubState(channelData?.isSubscribed || false);
+
+        setInitialSubCount(channelData?.subscribersCount || 0);
+      } catch (error) {
+        console.error("Failed to fetch channel subscription state:", error);
+
+        if (!cancelled) {
+          setInitialSubState(false);
+          setInitialSubCount(0);
+        }
+      }
+    };
+
+    fetchChannelState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [owner?.username]);
 
   return (
     <div className="mt-6 border-4 border-neoBlack shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white p-5">
@@ -455,9 +541,12 @@ const CreatorBar = ({ currentVideo, currentUser }) => {
       <h1 className="mb-2 text-2xl font-black tracking-tight uppercase sm:text-3xl">
         {currentVideo?.title}
       </h1>
+
       <div className="flex flex-wrap items-center gap-4 mb-4 text-sm font-bold text-gray-600">
         <span>{currentVideo?.views || 0} views</span>
+
         <span>•</span>
+
         <span>
           {currentVideo?.createdAt
             ? new Date(currentVideo.createdAt).toLocaleDateString()
@@ -467,17 +556,21 @@ const CreatorBar = ({ currentVideo, currentUser }) => {
 
       {/* Channel row */}
       <div className="flex items-center justify-between flex-wrap gap-3 bg-neoWhite border-4 border-neoBlack shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4">
-        {/* Left: Avatar + name + subs */}
+        {/* Left: Avatar + name + subscribers */}
         <div className="flex items-center gap-3">
           {hasOwner && (
             <Link to={`/u/${owner.username}`}>
               <img
-                src={owner.avatar || `https://ui-avatars.com/api/?name=${owner.username}&background=8fff00&bold=true`}
+                src={
+                  owner.avatar ||
+                  `https://ui-avatars.com/api/?name=${owner.username}&background=8fff00&bold=true`
+                }
                 alt={owner.username}
                 className="w-12 h-12 rounded-full border-4 border-neoBlack object-cover shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:scale-105 transition-transform"
               />
             </Link>
           )}
+
           <div>
             {hasOwner && (
               <Link
@@ -487,6 +580,7 @@ const CreatorBar = ({ currentVideo, currentUser }) => {
                 {owner.username}
               </Link>
             )}
+
             <p className="text-sm font-bold text-gray-500">
               {subscribersCount} subscribers
             </p>
@@ -501,11 +595,16 @@ const CreatorBar = ({ currentVideo, currentUser }) => {
               disabled={loading}
               className={`neo-btn uppercase tracking-widest text-sm px-5 py-2.5 border-4 border-neoBlack shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-black ${
                 isSubscribed ? "bg-[#8fff00]" : "bg-white"
-              } ${loading ? "opacity-50 cursor-not-allowed" : "hover:-translate-y-0.5"}`}
+              } ${
+                loading
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:-translate-y-0.5"
+              }`}
             >
               {isSubscribed ? "Subscribed" : "Subscribe"}
             </button>
           )}
+
           {currentVideo?._id && <LikeButton videoId={currentVideo._id} />}
         </div>
       </div>
@@ -546,7 +645,9 @@ const CommentSection = ({
 
     fetchComments();
     setCommentInput("");
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [videoId]);
 
   const handlePostComment = async () => {
