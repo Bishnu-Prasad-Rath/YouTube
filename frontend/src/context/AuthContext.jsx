@@ -64,8 +64,7 @@ const fetchCurrentUser = async () => {
     });
 
     let user = data.data;
-    console.log("CURRENT USER FROM AUTH:", data.data);
-console.log("AUTH AVATAR:", data.data?.avatar);
+
     // Fetch the public channel profile to make sure
     // avatar and other profile information are up to date.
     if (user?.username) {
